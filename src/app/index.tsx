@@ -9,7 +9,7 @@ export default function Index() {
         alignItems: "center",
       }}
     >
-      <Text className="text-gray-800">Essa é a nova tela inicial.</Text>
+      <Text className="text-gray-800 text-4xl">Essa é a nova tela inicial.</Text>
     </View>
   );
 }
