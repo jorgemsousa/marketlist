@@ -1,15 +1,11 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { View, Image, Text, useWindowDimensions, TouchableOpacity } from 'react-native';
 import Container from '../components/container';
 
 import LoginModal from '@/src/components/loginModal';
 import RegisterModal from '../components/registerModal';
 
-type Props = {
-  children: ReactNode,
-};
-
-const Login = ({ children }: Props) => {
+const Login = () => {
   const { width, height } = useWindowDimensions(); 
   const [open, setOpen] = React.useState(false);
   const [openReg, setOpenReg] = React.useState(false);
@@ -36,7 +32,7 @@ const Login = ({ children }: Props) => {
             onPress={() => setOpen(true)} 
             className='bg-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full my-2'
           >
-            <Text className='text-white font-semibold text-lg'>
+            <Text className='text-white font-bold text-lg'>
               Login
             </Text>
           </TouchableOpacity>
