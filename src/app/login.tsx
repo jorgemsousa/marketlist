@@ -12,7 +12,7 @@ const Login = () => {
 
   return (
     <Container>
-      <View className='flex-1 items-center justify-center'>
+      <View className='flex-2 justify-center items-center mt-20'>
         <Text className='text-center font-bold text-4xl text-purple-700 mt-8'>
           Bem-vindo de volta!
         </Text>
@@ -31,7 +31,7 @@ const Login = () => {
           <TouchableOpacity 
             onPress={() => setOpen(true)} 
             className='bg-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full my-2'
-          >
+            >
             <Text className='text-white font-bold text-lg'>
               Login
             </Text>
@@ -40,15 +40,15 @@ const Login = () => {
           <TouchableOpacity 
             onPress={() => setOpenReg(true)} 
             className='border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full my-2'
-          >
+            >
             <Text className='text-purple-700 font-semibold text-lg'>
               Cadastrar
             </Text>
           </TouchableOpacity>
         </View>
+        <LoginModal open={open} onClose={() => setOpen(false)} /> 
+        <RegisterModal open={openReg} onClose={() => setOpenReg(false)} /> 
       </View>
-      <LoginModal open={open} onClose={() => setOpen(false)} /> 
-      <RegisterModal open={openReg} onClose={() => setOpenReg(false)} /> 
     </Container>
   );
 };

@@ -1,28 +1,37 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Modal, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '@/src/database/supabase';
 
 type Props = {
   open: boolean;
   onClose: () => void;
 };
 
+type PropsAccount = {
+  name: string;
+  email: string;
+  password: string;
+  passwordRepeat: string;
+  image: string;
+};
+
 const RegisterModal = ({ open, onClose }: Props) => {
   const [modalVisible, setModalVisible] = useState(open);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordRepeat, setPasswordRepeat] = useState('');
+  const [image, setImage] = useState('');
   const [nameFocused, setNameFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordRepeatFocused, setPasswordRepeatFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  const [image, setImage] = useState<string | null>(null);
+  const [imageFocused, setImageFocused] = useState(false);
+  const { width, height} = useWindowDimensions()
   const slideAnim = useRef(new Animated.Value(300)).current;
 
-  useEffect(() => {
-    if (open) {
-      slideIn();
-    } else {
-      slideOut();
-    }
-  }, [open]);
-
+ 
   const slideIn = () => {
     setModalVisible(true);
     Animated.timing(slideAnim, {
@@ -35,7 +44,7 @@ const RegisterModal = ({ open, onClose }: Props) => {
 
   const slideOut = () => {
     Animated.timing(slideAnim, {
-      toValue: 300,
+      toValue: 700,
       duration: 500,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
@@ -58,8 +67,31 @@ const RegisterModal = ({ open, onClose }: Props) => {
     }
   };
 
+  const handleCreateAccount = async (account: PropsAccount) => {
+    const response = await supabase.from('usuarios').insert({
+      nome: account.name,
+      email: account.email,
+      senha: account.password,
+      senha_repetida: account.passwordRepeat,
+      imagem: account.image,
+    })
+    if (response.error) {
+      console.error('Erro ao criar usuário:', response.error);
+    } else {
+      console.log('Usuário criado com sucesso!');
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      slideIn();
+    } else {
+      slideOut();
+    }
+  }, [open]);
+
   return (
-    <View className='flex-1 justify-center items-center'>
+    <View className='flex-4 justify-center items-center'>
       {modalVisible && (
         <Modal transparent={true} visible={modalVisible} animationType="none">
           <View className='flex-1 justify-end'>
@@ -67,66 +99,69 @@ const RegisterModal = ({ open, onClose }: Props) => {
               style={{
                 transform: [{ translateY: slideAnim }],
               }}
-              className='bg-white p-6 rounded-t-xl'
+              className='bg-zinc-50 border border-zinc-300 p-6 rounded-t-3xl'
             >
-              <Text className='text-center font-bold text-2xl mb-4'>Cadastro</Text>
-
-              {/* Avatar */}
-              <TouchableOpacity onPress={pickImage} className='items-center mb-6'>
-                {image ? (
-                  <Image source={{ uri: image }} className='w-24 h-24 rounded-full' />
-                ) : (
-                  <View className='w-24 h-24 rounded-full bg-gray-200 items-center justify-center'>
-                    <Text className='text-gray-500 font-semibold text-lg'>Foto</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-
-              {/* Nome */}
-              <TextInput
-                placeholder="Nome"
-                onFocus={() => setNameFocused(true)}
-                onBlur={() => setNameFocused(false)}
-                style={{
-                  borderColor: nameFocused ? '#6200EE' : '#ccc',
-                  borderWidth: 2,
-                  borderRadius: 8,
-                  padding: 16,
-                  marginBottom: 16,
-                }}
+              <Text className='text-purple-700 text-center font-bold text-3xl mb-4'>Cadastro</Text>
+              <Image 
+                source={require('../../assets/images/register.png')}
+                style={{ width, height: height * 0.2, resizeMode: 'contain', marginVertical: 20 }}
               />
 
-              {/* E-mail */}
+                           
+              <TextInput
+                placeholder="Nome"
+                onChangeText={setName}
+                value={name}
+                onFocus={() => setNameFocused(true)}
+                onBlur={() => setNameFocused(false)}
+                className={`border-2 ${nameFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
+              />
+
               <TextInput
                 placeholder="E-mail"
                 keyboardType="email-address"
+                onChangeText={setEmail}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
-                style={{
-                  borderColor: emailFocused ? '#6200EE' : '#ccc',
-                  borderWidth: 2,
-                  borderRadius: 8,
-                  padding: 16,
-                  marginBottom: 16,
-                }}
+                className={`border-2 ${emailFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
               />
-
-              {/* Senha */}
               <TextInput
                 placeholder="Senha"
                 secureTextEntry
+                onChangeText={setPassword}
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
-                style={{
-                  borderColor: passwordFocused ? '#6200EE' : '#ccc',
-                  borderWidth: 2,
-                  borderRadius: 8,
-                  padding: 16,
-                  marginBottom: 24,
-                }}
-              />
+                className={`border-2 ${passwordFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
+              />  
+              <TextInput
+                placeholder="Repita a Senha"
+                secureTextEntry
+                onChangeText={setPasswordRepeat}
+                onFocus={() => setPasswordRepeatFocused(true)}
+                onBlur={() => setPasswordRepeatFocused(false)}
+                className={`border-2 ${passwordRepeatFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
+              />  
 
-              <TouchableOpacity onPress={slideOut} className='bg-blue-500 p-4 rounded-lg'>
+              <TextInput
+                placeholder="url da imagem"
+                secureTextEntry
+                onChangeText={setImage}
+                onFocus={() => setImageFocused(true)}
+                onBlur={() => setImageFocused(false)}
+                className={`border-2 ${imageFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-10 bg-gray-100`}
+              /> 
+
+              <TouchableOpacity 
+                onPress={() => {
+                  slideOut();
+                  handleCreateAccount({
+                    name: name,
+                    email: email,
+                    password: password,
+                    passwordRepeat: passwordRepeat,
+                    image: image
+                  })}}
+                className='bg-purple-700 p-4 rounded-full mb-4'>
                 <Text className='text-white font-bold text-center text-lg'>Cadastrar</Text>
               </TouchableOpacity>
             </Animated.View>

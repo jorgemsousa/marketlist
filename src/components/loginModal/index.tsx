@@ -28,7 +28,7 @@ const LoginModal = ({ open, onClose }: Props) => {
       return;
     } else {
       console.log('autenticado')
-      //router.replace('/dashboard');
+      router.replace('/dashboard');
     }
   }
 
