@@ -33,16 +33,12 @@ const Dashboard = () => {
         <>
             {session && session.user ? (
                 <SafeAreaView>
-                    <View className='flex-row items-center justify-between mt-4 p-4'>
-                        <View className='flex-row items-center justify-start gap-2'>
-                            <FontAwesome name="user-circle" size={44} color="#72cc" />
-                            <Text className='text-zinc-400 text-xl'>{session.user.email}</Text>
-                        </View>
+                    <View className='flex-row items-center justify-end mt-4 p-4 w-full'>                       
                         <TouchableOpacity onPress={signOut}>
                             <Ionicons name="exit" size={24} color="#72cc" />
                         </TouchableOpacity>
                     </View>
-                    <View className='justify-center items-center'>
+                    <View className='mt-80 justify-center items-center'>
                         <Text className='text-purple-700 text-center font-bold text-3xl'>Dashboard</Text>
                     </View>
                 </SafeAreaView>
