@@ -16,8 +16,6 @@ const LoginModal = ({ open, onClose }: Props) => {
   const [password, setPassword] = useState('');
   const [passwordFocused, setPasswordFocused] = useState(false);
   const { width, height} = useWindowDimensions()
-  const {navigate} = useNavigation();
-  const navigation = navigate;
   const slideAnim = useRef(new Animated.Value(300)).current;
 
   async function handleSignIn() {
@@ -63,7 +61,7 @@ const LoginModal = ({ open, onClose }: Props) => {
   };
 
   return (
-    <View className='flex-4 justify-center items-center'>
+    <View className='flex-2 justify-center items-center'>
       {modalVisible && (
         <Modal transparent={true} visible={modalVisible} animationType="none">
           <View className='flex-1 justify-end'>
@@ -95,7 +93,7 @@ const LoginModal = ({ open, onClose }: Props) => {
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
                 onChangeText={setPassword}
-                className={`border-2 ${passwordFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-10 bg-gray-100`}
+                className={`border-2 ${passwordFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
             
               />
 

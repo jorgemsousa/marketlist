@@ -6,6 +6,7 @@ import { CartesianChart, CartesianChartRenderArg } from "victory-native";
 import Login from '../../login'
 import Container from '../../../components/container'
 import { FontAwesome, Ionicons } from '@expo/vector-icons'
+import { router } from 'expo-router';
 
 const Dashboard = () => {
     const [session, setSession] = useState<Session | null>(null)
@@ -17,6 +18,7 @@ const Dashboard = () => {
 
     const signOut = () => {
         supabase.auth.signOut();
+        router.replace('/login');
     }
 
     useEffect(() => {
