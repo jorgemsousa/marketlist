@@ -2,6 +2,7 @@ import React, { Component, useEffect, useState } from 'react'
 import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native'
 import { supabase } from '../../../database/supabase'
 import { Session } from '@supabase/supabase-js'
+import { CartesianChart, CartesianChartRenderArg } from "victory-native";
 import Login from '../../login'
 import Container from '../../../components/container'
 import { FontAwesome, Ionicons } from '@expo/vector-icons'
@@ -9,15 +10,10 @@ import { FontAwesome, Ionicons } from '@expo/vector-icons'
 const Dashboard = () => {
     const [session, setSession] = useState<Session | null>(null)
 
-    const DATA = [
-        { day: 'Segunda', value: 10 },
-        { day: 'Terça', value: 15 },
-        { day: 'Quarta', value: 12 },
-        { day: 'Quinta', value: 18 },
-        { day: 'Sexta', value: 14 },
-        { day: 'Sábado', value: 16 },
-        { day: 'Domingo', value: 11 },
-    ]
+    const DATA = Array.from({ length: 31 }, (_, i) => ({
+        day: i,
+        highTmp: 40 + 30 * Math.random(),
+      }));
 
     const signOut = () => {
         supabase.auth.signOut();
@@ -46,8 +42,8 @@ const Dashboard = () => {
                             <Ionicons name="exit" size={24} color="#72cc" />
                         </TouchableOpacity>
                     </View>
-                    <View className='flex-2 items-center justify-center w-full h-90'>
-                        <Text className='text-zinc-800 text-2xl'>bem-vindo </Text>
+                    <View className='justify-center items-center'>
+                        <Text className='text-purple-700 text-center font-bold text-3xl'>Dashboard</Text>
                     </View>
                 </SafeAreaView>
             ): (
