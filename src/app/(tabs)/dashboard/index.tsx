@@ -70,7 +70,7 @@ const Dashboard = () => {
           <Header title='Dashboard' signOut={signOut} />
           <SafeAreaView className='flex-1 bg-white px-4'>
             <Text className='text-purple-700 text-center font-bold text-md m-4'>Gráfico de gastos</Text>
-            <View style={{ height: 300, width: 'auto'}}>
+            <View style={{ height: 300, width: 'auto', padding: 16}}>
               <CartesianChart
                 data={DATA}
                 xKey={"day"}
@@ -93,6 +93,7 @@ const Dashboard = () => {
               </CartesianChart>
             </View>
             <View style={{ flex: 1, paddingHorizontal: 16 }}>
+            <Text className='text-purple-700 text-center font-bold text-md m-4'>Listas fechadas</Text>
               <FlatList
                 data={filterOrders(false)}
                 keyExtractor={(item, index) => item?.day ?? index.toString()}
