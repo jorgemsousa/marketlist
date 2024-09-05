@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 
 export default function DashLayout() {
   return (
@@ -59,6 +59,20 @@ export default function DashLayout() {
             }
         }}
       />
+      <Tabs.Screen 
+        name="products"
+        options={{
+            headerShown: false,
+            title: "Produtos",
+            tabBarIcon: ({ focused, color, size }) => {
+                if (focused) {
+                    return <Ionicons name="cart-sharp" color={"#7e22ce"} size={size} />
+                }
+
+                return <Ionicons name="cart" color={color} size={size} />
+            }
+        }}
+      />      
       <Tabs.Screen 
         name="profile"
         options={{
