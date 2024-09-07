@@ -68,12 +68,10 @@ const RegisterModal = ({ open, onClose }: Props) => {
   };
 
   const handleCreateAccount = async (account: PropsAccount) => {
-    const response = await supabase.from('usuarios').insert({
-      nome: account.name,
+    console.log(account)
+    const response = await supabase.auth.signUp({
       email: account.email,
-      senha: account.password,
-      senha_repetida: account.passwordRepeat,
-      imagem: account.image,
+      password: account.password,
     })
     if (response.error) {
       console.error('Erro ao criar usuário:', response.error);
@@ -114,7 +112,7 @@ const RegisterModal = ({ open, onClose }: Props) => {
                 value={name}
                 onFocus={() => setNameFocused(true)}
                 onBlur={() => setNameFocused(false)}
-                className={`border-2 ${nameFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
+                className={`border-2 ${nameFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
               />
 
               <TextInput
@@ -123,7 +121,7 @@ const RegisterModal = ({ open, onClose }: Props) => {
                 onChangeText={setEmail}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
-                className={`border-2 ${emailFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
+                className={`border-2 ${emailFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
               />
               <TextInput
                 placeholder="Senha"
@@ -131,7 +129,7 @@ const RegisterModal = ({ open, onClose }: Props) => {
                 onChangeText={setPassword}
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
-                className={`border-2 ${passwordFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
+                className={`border-2 ${passwordFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
               />  
               <TextInput
                 placeholder="Repita a Senha"
@@ -139,7 +137,7 @@ const RegisterModal = ({ open, onClose }: Props) => {
                 onChangeText={setPasswordRepeat}
                 onFocus={() => setPasswordRepeatFocused(true)}
                 onBlur={() => setPasswordRepeatFocused(false)}
-                className={`border-2 ${passwordRepeatFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
+                className={`border-2 ${passwordRepeatFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
               />  
 
               <TextInput
@@ -148,7 +146,7 @@ const RegisterModal = ({ open, onClose }: Props) => {
                 onChangeText={setImage}
                 onFocus={() => setImageFocused(true)}
                 onBlur={() => setImageFocused(false)}
-                className={`border-2 ${imageFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-10 bg-gray-100`}
+                className={`border-2 ${imageFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-10 bg-gray-100`}
               /> 
 
               <TouchableOpacity 

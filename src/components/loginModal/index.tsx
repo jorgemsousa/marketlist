@@ -84,7 +84,7 @@ const LoginModal = ({ open, onClose }: Props) => {
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
                 onChangeText={setEmail}
-                className={`border-2 ${emailFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
+                className={`border-2 ${emailFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
               />
               
               <TextInput
@@ -93,7 +93,7 @@ const LoginModal = ({ open, onClose }: Props) => {
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
                 onChangeText={setPassword}
-                className={`border-2 ${passwordFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
+                className={`border-2 ${passwordFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
             
               />
 

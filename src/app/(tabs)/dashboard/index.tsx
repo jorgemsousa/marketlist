@@ -67,8 +67,8 @@ const Dashboard = () => {
     <>
       {session && session.user ? (
         <>
-          <Header title='Dashboard' signOut={signOut} />
-          <SafeAreaView className='flex-1 bg-white px-4'>
+          <Header title={session?.user?.email} signOut={signOut} />
+          <SafeAreaView className='flex-1 bg-white px-2'>
             <Text className='text-purple-700 text-center font-bold text-md m-4'>Gráfico de gastos</Text>
             <View style={{ height: 300, width: 'auto', padding: 16}}>
               <CartesianChart

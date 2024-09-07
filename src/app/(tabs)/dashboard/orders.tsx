@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { FlatList, SafeAreaView, Text, TouchableOpacity, View, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '@/src/components/header';
+import { router } from 'expo-router';
+
 
 const Orders = () => {
   const [listas, setListas] = useState([
@@ -13,6 +15,15 @@ const Orders = () => {
   const [novaListaNomeFocused, setNovaListaNomeFocused] = useState(false);
   const [novaListaValor, setNovaListaValor] = useState('');
   const [novaListaValorFocused, setNovaListaValorFocused] = useState(false);
+  
+
+  const handleOpenList = (listName: string) => {
+    // Navega para a tela 'shopping-list' e passa o parâmetro 'shoppingListName'
+    router.replace({
+      pathname: '/shoppingList' as const,
+      params: { shoppingListName: listName },
+    });
+  };
 
   const adicionarLista = () => {
     if (novaListaNome === '' || novaListaValor === '') {
@@ -35,7 +46,7 @@ const Orders = () => {
     <>    
         <Header title='Pedidos' signOut={() => {}} />
         
-        <SafeAreaView className='flex-1 p-4'>
+        <SafeAreaView className='flex-1 p-4 bg-white'>
         <View className="flex-row items-center justify-between w-full p-4">
             <Text className='text-purple-700 font-bold text-xl'>Listas Abertas</Text>
             <TouchableOpacity onPress={adicionarLista} className='p-2 bg-purple-700 rounded-xl'>
@@ -43,14 +54,14 @@ const Orders = () => {
             </TouchableOpacity>
         </View>
 
-        <View className="m-4">
+        <View className="m-2">
             <TextInput
                 placeholder="Nome da nova lista"
                 value={novaListaNome}
                 onChangeText={setNovaListaNome}
                 onFocus={() => setNovaListaNomeFocused(true)}
                 onBlur={() => setNovaListaNomeFocused(false)}
-                className={`border-2 ${novaListaNomeFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}                 
+                className={`border-2 ${novaListaNomeFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}                 
             />
             <TextInput
                 placeholder="Valor"
@@ -58,18 +69,20 @@ const Orders = () => {
                 onChangeText={setNovaListaValor}
                 onFocus={() => setNovaListaValorFocused(true)}
                 onBlur={() => setNovaListaValorFocused(false)}
-                className={`border-2 ${novaListaValorFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}                 
+                className={`border-2 ${novaListaValorFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}                 
             />
         </View>
-        <View className='mx-4'>
+        <View className=''>
           <FlatList
               data={listas}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-              <View className='flex-row items-center justify-between p-4 rounded-xl bg-white mb-2 ml-2 mr-2'>
-                  <Text className='text-md text-purple-600 font-semibold'>{item.nome}</Text>
-                  <Text className='text-md text-purple-600 font-semibold'>{item.valor}</Text>
-              </View>
+                <TouchableOpacity onPress={() => handleOpenList(item.nome)}>
+                  <View className='flex-row items-center justify-between p-4 rounded-xl bg-zinc-100 mb-2 ml-2 mr-2'>
+                      <Text className='text-md text-purple-600 font-semibold'>{item.nome}</Text>
+                      <Text className='text-md text-purple-600 font-semibold'>{item.valor}</Text>
+                  </View>
+                </TouchableOpacity>
               )}
           />
         </View>
