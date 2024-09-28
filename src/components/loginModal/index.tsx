@@ -1,8 +1,8 @@
-import { supabase } from '@/src/database/supabase';
-import { useNavigation, router } from 'expo-router';
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
-import Entypo from '@expo/vector-icons/Entypo';
+import { router } from 'expo-router';
+import { supabase } from '@/src/database/supabase';
+import Auth from '../auth';
 
 type Props = {
   open: boolean;
@@ -24,10 +24,9 @@ const LoginModal = ({ open, onClose }: Props) => {
     if (error) {
       console.error(error);
       return;
-    } else {
-      console.log('autenticado')
-      router.replace('/dashboard');
-    }
+    } 
+    console.log('autenticado')
+    router.replace('/dashboard');    
   }
 
   useEffect(() => {
@@ -78,32 +77,7 @@ const LoginModal = ({ open, onClose }: Props) => {
                 style={{ width, height: height * 0.3, resizeMode: 'contain', marginVertical: 20 }}
               />
 
-              <TextInput
-                placeholder="E-mail"
-                keyboardType="email-address"
-                onFocus={() => setEmailFocused(true)}
-                onBlur={() => setEmailFocused(false)}
-                onChangeText={setEmail}
-                className={`border-2 ${emailFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
-              />
-              
-              <TextInput
-                placeholder="Senha"
-                secureTextEntry
-                onFocus={() => setPasswordFocused(true)}
-                onBlur={() => setPasswordFocused(false)}
-                onChangeText={setPassword}
-                className={`border-2 ${passwordFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
-            
-              />
-
-              <TouchableOpacity onPress={() => {
-                slideOut()
-                handleSignIn()
-              }} 
-                className='bg-purple-700 p-4 rounded-full mb-20'>
-                <Text className='text-white font-bold text-center text-lg'>Entrar</Text>
-              </TouchableOpacity>
+              <Auth onClose={onClose} />
             </Animated.View>
           </View>
         </Modal>

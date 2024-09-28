@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FlatList, SafeAreaView, Text, View, useColorScheme } from 'react-native';
 import { supabase } from '../../../database/supabase';
-import { Session } from '@supabase/supabase-js';
+import type { Session } from '@supabase/supabase-js';
 import { CartesianChart, Line, Area } from "victory-native";
 import { router } from 'expo-router';
 import { LinearGradient, useFont, vec } from '@shopify/react-native-skia';

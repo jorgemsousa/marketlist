@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '@/src/database/supabase';
+import { View, Text, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
+
+import Register from '../register';
 
 type Props = {
   open: boolean;
@@ -18,21 +18,11 @@ type PropsAccount = {
 
 const RegisterModal = ({ open, onClose }: Props) => {
   const [modalVisible, setModalVisible] = useState(open);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordRepeat, setPasswordRepeat] = useState('');
-  const [image, setImage] = useState('');
-  const [nameFocused, setNameFocused] = useState(false);
-  const [emailFocused, setEmailFocused] = useState(false);
-  const [passwordRepeatFocused, setPasswordRepeatFocused] = useState(false);
-  const [passwordFocused, setPasswordFocused] = useState(false);
-  const [imageFocused, setImageFocused] = useState(false);
   const { width, height} = useWindowDimensions()
   const slideAnim = useRef(new Animated.Value(300)).current;
 
  
-  const slideIn = () => {
+  const slideIn = React.useCallback(() => {
     setModalVisible(true);
     Animated.timing(slideAnim, {
       toValue: 0,
@@ -40,9 +30,9 @@ const RegisterModal = ({ open, onClose }: Props) => {
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start();
-  };
+  }, [slideAnim]);
 
-  const slideOut = () => {
+  const slideOut = React.useCallback(() => {
     Animated.timing(slideAnim, {
       toValue: 700,
       duration: 500,
@@ -52,33 +42,7 @@ const RegisterModal = ({ open, onClose }: Props) => {
       setModalVisible(false);
       onClose();
     });
-  };
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
-  };
-
-  const handleCreateAccount = async (account: PropsAccount) => {
-    console.log(account)
-    const response = await supabase.auth.signUp({
-      email: account.email,
-      password: account.password,
-    })
-    if (response.error) {
-      console.error('Erro ao criar usuário:', response.error);
-    } else {
-      console.log('Usuário criado com sucesso!');
-    }
-  };
+  }, [slideAnim, onClose]);
 
   useEffect(() => {
     if (open) {
@@ -86,7 +50,7 @@ const RegisterModal = ({ open, onClose }: Props) => {
     } else {
       slideOut();
     }
-  }, [open]);
+  }, [open, slideIn, slideOut]);
 
   return (
     <View className='flex-4 justify-center items-center'>
@@ -103,71 +67,12 @@ const RegisterModal = ({ open, onClose }: Props) => {
               <Image 
                 source={require('../../assets/images/register.png')}
                 style={{ width, height: height * 0.2, resizeMode: 'contain', marginVertical: 20 }}
-              />
-
-                           
-              <TextInput
-                placeholder="Nome"
-                onChangeText={setName}
-                value={name}
-                onFocus={() => setNameFocused(true)}
-                onBlur={() => setNameFocused(false)}
-                className={`border-2 ${nameFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
-              />
-
-              <TextInput
-                placeholder="E-mail"
-                keyboardType="email-address"
-                onChangeText={setEmail}
-                onFocus={() => setEmailFocused(true)}
-                onBlur={() => setEmailFocused(false)}
-                className={`border-2 ${emailFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
-              />
-              <TextInput
-                placeholder="Senha"
-                secureTextEntry
-                onChangeText={setPassword}
-                onFocus={() => setPasswordFocused(true)}
-                onBlur={() => setPasswordFocused(false)}
-                className={`border-2 ${passwordFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
-              />  
-              <TextInput
-                placeholder="Repita a Senha"
-                secureTextEntry
-                onChangeText={setPasswordRepeat}
-                onFocus={() => setPasswordRepeatFocused(true)}
-                onBlur={() => setPasswordRepeatFocused(false)}
-                className={`border-2 ${passwordRepeatFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-4 bg-gray-100`}
-              />  
-
-              <TextInput
-                placeholder="url da imagem"
-                secureTextEntry
-                onChangeText={setImage}
-                onFocus={() => setImageFocused(true)}
-                onBlur={() => setImageFocused(false)}
-                className={`border-2 ${imageFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-2 mb-10 bg-gray-100`}
-              /> 
-
-              <TouchableOpacity 
-                onPress={() => {
-                  slideOut();
-                  handleCreateAccount({
-                    name: name,
-                    email: email,
-                    password: password,
-                    passwordRepeat: passwordRepeat,
-                    image: image
-                  })}}
-                className='bg-purple-700 p-4 rounded-full mb-4'>
-                <Text className='text-white font-bold text-center text-lg'>Cadastrar</Text>
-              </TouchableOpacity>
+              />                          
+              <Register onClose={onClose} />
             </Animated.View>
           </View>
         </Modal>
       )}
     </View>
   );
-};
-
-export default RegisterModal;
+};export default RegisterModal;
