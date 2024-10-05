@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import type React from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams } from 'expo-router'; 
 import Header from '../../components/header';
@@ -54,7 +55,7 @@ const ShoppingListScreen: React.FC = () => {
 
   return (
     <>    
-        <Header title={shoppingListName.toString()} />
+        <Header title={shoppingListName.toString()} page='tabs' />
         <View className="flex-1 bg-white p-4">
         <View className='flex-row items-center justify-between'>
             <Text className='text-xl font-bold text-center mb-4'>{shoppingListName}</Text>
@@ -64,25 +65,25 @@ const ShoppingListScreen: React.FC = () => {
 
         <ScrollView className='flex-1'>
             {products.map((product) => (
-            <View key={product.id} className='flex-row items-center  justify-between mb-2 bg-zinc-200 p-1 rounded-xl' >
+            <View key={product.id} className='flex-row items-center  justify-between mb-2 bg-zinc-100 p-2 rounded-xl' >
                 
                 <Text className='ml-2 w-32 text-purple-700 font-semibold text-lg'>{product.name}</Text>
                 <View className='flex-row items-center'>
                     <TextInput
-                    className='py-1 text-center w-12 mr-2 rounded-xl bg-zinc-100'
-                    keyboardType="numeric"
-                    placeholder="Qtd"
-                    value={product.quantity.toString()}
-                    editable={!product.bought}
-                    onChangeText={(text) => handleUpdateProduct(product.id, 'quantity', parseInt(text) || 0)}
+                      className='py-1 text-center w-12 mr-2 rounded-md bg-zinc-200'
+                      keyboardType="numeric"
+                      placeholder="Qtd"
+                      value={product.quantity.toString()}
+                      editable={!product.bought}
+                      onChangeText={(text) => handleUpdateProduct(product.id, 'quantity', Number.parseInt(text) || 0)}
                     />
                     <TextInput
-                    className='py-1 w-16 bg-zinc-100 text-center mr-2'
-                    keyboardType="numeric"
-                    placeholder="Preço"
-                    value={product.price.toString()}
-                    editable={!product.bought}
-                    onChangeText={(text) => handleUpdateProduct(product.id, 'price', parseFloat(text) || 0)}
+                      className='py-1 w-16 bg-zinc-200 text-center mr-2 rounded-md'
+                      keyboardType="numeric"
+                      placeholder="Preço"
+                      value={product.price.toString()}
+                      editable={!product.bought}
+                      onChangeText={(text) => handleUpdateProduct(product.id, 'price', Number.parseFloat(text) || 0)}
                     />                
                 </View>    
             </View>
@@ -91,7 +92,7 @@ const ShoppingListScreen: React.FC = () => {
 
         {/* Botão para Adicionar Produto */}
         <TouchableOpacity
-            className='bg-purple-700 rounded-full items-center mt-4 p-3'
+            className='bg-purple-700 rounded-full items-center mt-4 mb-8 p-3'
             onPress={handleAddProduct}
         >
             <Text className="text-white font-bold text-xl">Adicionar Produto</Text>
