@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
-import { supabase } from '@/src/database/supabase';
 import Auth from '../auth';
 
 type Props = {
@@ -18,17 +17,7 @@ const LoginModal = ({ open, onClose }: Props) => {
   const { width, height} = useWindowDimensions()
   const slideAnim = useRef(new Animated.Value(300)).current;
 
-  async function handleSignIn() {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      console.error(error);
-      return;
-    } 
-    console.log('autenticado')
-    router.replace('/dashboard');    
-  }
-
+ 
   useEffect(() => {
     if (open) {
       slideIn();

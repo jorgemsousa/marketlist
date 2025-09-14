@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
-import { supabase } from '@/src/database/supabase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/src/database/firebaseConfig';
 
 type Props = {
   onClose: () => void;
@@ -12,17 +13,24 @@ const Auth = ({ onClose }: Props) => {
   const [emailFocused, setEmailFocused] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordFocused, setPasswordFocused] = useState(false);
-
-  async function handleSignIn() {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      console.error(error);
-      return;
-    } 
-    console.log('autenticado')
-    router.replace('/dashboard');    
+  
+  
+  
+  async function handleSignIn() {    
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        console.log('Usuário autenticado:', user);
+        router.replace('/dashboard');    
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.error('Erro ao autenticar usuário:', errorCode, errorMessage);
+      });
+    onClose();
   }
+
   return (        
     <View>         
       <TextInput

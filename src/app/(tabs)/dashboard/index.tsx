@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FlatList, SafeAreaView, Text, View, useColorScheme } from 'react-native';
-import { supabase } from '../../../database/supabase';
-import type { Session } from '@supabase/supabase-js';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { CartesianChart, Line, Area } from "victory-native";
 import { router } from 'expo-router';
 import { LinearGradient, useFont, vec } from '@shopify/react-native-skia';
@@ -10,8 +9,11 @@ import Login from '../../login';
 
 const mono = require('../../../../assets/fonts/SpaceMono-Regular.ttf');
 
+
 const Dashboard = () => {
-  const [session, setSession] = useState<Session | null>(null);
+  const auth = getAuth();
+  const [session, setSession] = useState<{ user: any } | null>(null);
+
   const font = useFont(mono, 12);
   const colorMode = useColorScheme();
 
@@ -37,7 +39,7 @@ const Dashboard = () => {
   ];
 
   const signOut = () => {
-    supabase.auth.signOut();
+    auth.signOut();
     router.replace('/login');
   };
 
@@ -54,13 +56,14 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const uid = user.uid;
+        setSession({ user });
+      } else {
+        setSession(null);
+      }
+    });    
   }, []);
 
   return (

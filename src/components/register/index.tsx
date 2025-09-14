@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '@/src/database/supabase';
+import { auth } from '@/src/database/firebaseConfig';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 type Props = {
   onClose: () => void;
@@ -27,19 +27,22 @@ const Register = ({ onClose }: Props) => {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [imageFocused, setImageFocused] = useState(false);
 
-  const handleCreateAccount = async (account: PropsAccount) => {
-    console.log(account)
-    const response = await supabase.auth.signUp({
-      email: account.email,
-      password: account.password,
-    })
+ const handleCreateAccount = async () => {
+  if(password !== passwordRepeat){
+    alert('As senhas não coincidem!');
+    return;
+  }
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    console.log('Usuário criado:', userCredential.user);
     onClose();
-    if (response.error) {
-      console.error('Erro ao criar usuário:', response.error);
-    } else {
-      console.log('Usuário criado com sucesso!');
-    }
-  };
+  } catch (error: any) {
+    console.error('Erro ao criar usuário:', error.code, error.message);
+    alert(error.message);
+  }
+}
+
 
   return (
     <View>                   
@@ -79,7 +82,6 @@ const Register = ({ onClose }: Props) => {
 
       <TextInput
         placeholder="url da imagem"
-        secureTextEntry
         onChangeText={setImage}
         onFocus={() => setImageFocused(true)}
         onBlur={() => setImageFocused(false)}
@@ -87,16 +89,13 @@ const Register = ({ onClose }: Props) => {
 
       <TouchableOpacity 
         onPress={() => {
-          handleCreateAccount({
-            name: name,
-            email: email,
-            password: password,
-            passwordRepeat: passwordRepeat,
-            image: image
-          })}}
+          handleCreateAccount()
+        }}
         className='bg-purple-700 p-4 rounded-full mb-4'>
         <Text className='text-white font-bold text-center text-lg'>Cadastrar</Text>
       </TouchableOpacity>
     </View>
   );
-};export default Register;
+};
+
+export default Register;
