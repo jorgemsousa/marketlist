@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, FlatList, Text, TouchableOpacity, TextInput, Alert, Image } from 'react-native';
+import { SafeAreaView, View, FlatList, Text, TouchableOpacity, TextInput, Alert, Image, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Header from "@/src/components/header";
-import { supabase } from '@/src/database/supabase';
+import { collection, addDoc, getDocs } from "firebase/firestore";
+import { db } from '@/src/database/firebaseConfig';
 
-// Definição dos tipos para os produtos
 interface Product {
-  id?: number;
+  id: string;
   name: string;
   imageUrl: string;
   type: string;
@@ -14,33 +14,24 @@ interface Product {
 
 const Products: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [newProductName, setNewProductName] = useState<string>('');
-  const [newProductImageUrl, setNewProductImageUrl] = useState<string>('');
-  const [newProductType, setNewProductType] = useState<string>('');
-  const [isAdding, setIsAdding] = useState<boolean>(false);
+  const [newProductName, setNewProductName] = useState('');
+  const [newProductImageUrl, setNewProductImageUrl] = useState('');
+  const [newProductType, setNewProductType] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
   const [productTypes, setProductTypes] = useState<string[]>([]);
 
-  // Função para buscar os produtos do Supabase
   const fetchProducts = async () => {
-    const { data, error } = await supabase
-      .from('produtos')
-      .select('product_id, product_name, product_url_image, product_category');
+    const snapshot = await getDocs(collection(db, "products"));
+    const data: Product[] = snapshot.docs.map(doc => ({
+      id: doc.id,
+      name: doc.data().name,
+      imageUrl: doc.data().imageUrl,
+      type: doc.data().type,
+    }));
+    setProducts(data);
 
-    if (error) {
-      console.error('Erro ao buscar produtos:', error);
-    } else {
-      console.log(data);
-      const formattedProducts = data?.map((product: any) => ({
-        id: product.product_id,
-        name: product.product_name,
-        imageUrl: product.product_url_image,
-        type: product.product_category,
-      })) || [];
-
-      setProducts(formattedProducts);
-      const uniqueCategories = [...new Set(data?.map((product: any) => product.product_category))];
-      setProductTypes(uniqueCategories);
-    }
+    const categories = Array.from(new Set(data.map(p => p.type)));
+    setProductTypes(categories);
   };
 
   useEffect(() => {
@@ -53,33 +44,39 @@ const Products: React.FC = () => {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('produtos')
-      .insert([{ product_name: newProductName, product_url_image: newProductImageUrl, product_category: newProductType }]);
+    try {
+      const docRef = await addDoc(collection(db, "products"), {
+        name: newProductName,
+        imageUrl: newProductImageUrl,
+        type: newProductType,
+      });
 
-    if (error) {
-      console.log(error.message);
-      Alert.alert('Erro', 'Erro ao adicionar o produto.');
-    } else {
-      // Atualize a lista de produtos com o novo produto
-      const newProduct: Product = {        
+      const newProduct: Product = {
+        id: docRef.id,
         name: newProductName,
         imageUrl: newProductImageUrl,
         type: newProductType,
       };
 
       setProducts([...products, newProduct]);
+
+      const categories = Array.from(new Set([...productTypes, newProductType]));
+      setProductTypes(categories);
+
       setNewProductName('');
       setNewProductImageUrl('');
       setNewProductType('');
       setIsAdding(false);
+
       Alert.alert('Sucesso', 'Produto adicionado com sucesso!');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Erro', 'Não foi possível adicionar o produto.');
     }
   };
 
   const renderSection = (type: string) => {
-    const sectionProducts = products.filter(product => product.type === type);
-
+    const sectionProducts = products.filter(p => p.type === type);
     if (sectionProducts.length === 0) return null;
 
     return (
@@ -88,13 +85,13 @@ const Products: React.FC = () => {
         <FlatList
           data={sectionProducts}
           horizontal
-          keyExtractor={(item) => item.name}
+          keyExtractor={item => item.id}
           showsHorizontalScrollIndicator={false}
           renderItem={({ item }) => (
-            <View style={{ marginRight: 16 }}>
+            <View style={{ marginRight: 16, alignItems: 'center' }}>
               <Image
                 source={{ uri: item.imageUrl }}
-                style={{ width: 100, height: 100, borderRadius: 8 }}             
+                style={{ width: 100, height: 100, borderRadius: 8 }}
               />
               <Text className="text-center mt-2 text-zinc-500">{item.name}</Text>
             </View>
@@ -117,38 +114,48 @@ const Products: React.FC = () => {
 
         <FlatList
           data={productTypes}
-          keyExtractor={(item) => item}
+          keyExtractor={item => item}
           renderItem={({ item }) => renderSection(item)}
         />
 
-        {isAdding && (
-          <View className="p-4 rounded-3xl mt-4 bg-white border border-purple-700 -mb-10">
-            <TextInput
-              placeholder="Nome do produto"
-              value={newProductName}
-              onChangeText={setNewProductName}
-              className="border-2 border-gray-300 rounded-full p-4 mb-4 bg-gray-100"
-            />
-            <TextInput
-              placeholder="URL da imagem"
-              value={newProductImageUrl}
-              onChangeText={setNewProductImageUrl}
-              className="border-2 border-gray-300 rounded-full p-4 mb-4 bg-gray-100"
-            />
-            <TextInput
-              placeholder="Tipo do produto (Alimento, Vestuário, etc.)"
-              value={newProductType}
-              onChangeText={setNewProductType}
-              className="border-2 border-gray-300 rounded-full p-4 mb-4 bg-gray-100"
-            />
-            <TouchableOpacity onPress={addProduct} className="bg-purple-700 p-3 rounded-full items-center mb-2 mt-4">
-              <Text className="text-white text-xl font-bold">Adicionar Produto</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setIsAdding(false)} className="bg-zinc-300 mb-28 items-center rounded-full p-3">
-              <Text className="text-zinc-500 text-xl font-semibold">Cancelar</Text>
-            </TouchableOpacity>
+        {/* Modal de adição */}
+        <Modal
+          animationType="slide"
+          transparent
+          visible={isAdding}
+          onRequestClose={() => setIsAdding(false)}
+        >
+          <View className="flex-1 justify-center items-center bg-black/50 p-4">
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="w-full">
+              <ScrollView contentContainerStyle={{ backgroundColor: 'white', borderRadius: 24, padding: 20 }}>
+                <TextInput
+                  placeholder="Nome do produto"
+                  value={newProductName}
+                  onChangeText={setNewProductName}
+                  className="border-2 border-gray-300 rounded-full p-4 mb-4 bg-gray-100"
+                />
+                <TextInput
+                  placeholder="URL da imagem"
+                  value={newProductImageUrl}
+                  onChangeText={setNewProductImageUrl}
+                  className="border-2 border-gray-300 rounded-full p-4 mb-4 bg-gray-100"
+                />
+                <TextInput
+                  placeholder="Tipo do produto (Alimento, Vestuário, etc.)"
+                  value={newProductType}
+                  onChangeText={setNewProductType}
+                  className="border-2 border-gray-300 rounded-full p-4 mb-4 bg-gray-100"
+                />
+                <TouchableOpacity onPress={addProduct} className="bg-purple-700 p-3 rounded-full items-center mb-2 mt-4">
+                  <Text className="text-white text-xl font-bold">Adicionar Produto</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setIsAdding(false)} className="bg-zinc-300 items-center rounded-full p-3">
+                  <Text className="text-zinc-500 text-xl font-semibold">Cancelar</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </KeyboardAvoidingView>
           </View>
-        )}
+        </Modal>
       </SafeAreaView>
     </>
   );

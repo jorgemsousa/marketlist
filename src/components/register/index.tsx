@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
-import { auth } from '@/src/database/firebaseConfig';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from '@/src/database/firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 type Props = {
@@ -35,7 +36,17 @@ const Register = ({ onClose }: Props) => {
 
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    console.log('Usuário criado:', userCredential.user);
+    const user = userCredential.user;
+
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      email: user.email,
+      name: name,
+      image: image,
+      createdAt: new Date()
+    });
+
+    Alert.alert("Sucesso", "Cadastro realizado!");
     onClose();
   } catch (error: any) {
     console.error('Erro ao criar usuário:', error.code, error.message);
@@ -93,6 +104,14 @@ const Register = ({ onClose }: Props) => {
         }}
         className='bg-purple-700 p-4 rounded-full mb-4'>
         <Text className='text-white font-bold text-center text-lg'>Cadastrar</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        onPress={() => {
+          onClose();
+        }} 
+        className='border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full'
+      >
+        <Text className='text-purple-700 font-bold text-center text-lg'>Cancelar</Text>
       </TouchableOpacity>
     </View>
   );

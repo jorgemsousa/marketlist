@@ -56,6 +56,14 @@ const Auth = ({ onClose }: Props) => {
         className='bg-purple-700 p-4 rounded-full mb-20'>
         <Text className='text-white font-bold text-center text-lg'>Entrar</Text>
       </TouchableOpacity>
+      <TouchableOpacity 
+        onPress={() => {
+          onClose();
+        }} 
+        className='border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full'
+      >
+        <Text className='text-purple-700 font-bold text-center text-lg'>Cancelar</Text>
+      </TouchableOpacity>
     </View>      
   );
 };
