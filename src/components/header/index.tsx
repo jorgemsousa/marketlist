@@ -13,7 +13,7 @@ type Props = {
 
 const Header = ({ children, title, page, signOut }: Props) => {
     return (
-        <View className="flex-row items-center justify-between w-full h-40 bg-purple-700 rounded-b-3xl px-4">
+        <View className="flex-3 flex-row items-center justify-between w-full h-40 bg-purple-700 rounded-b-3xl px-4 pt-8">
             { title === 'Dashboard' ? <View />  :
                 <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color="#fff" />
