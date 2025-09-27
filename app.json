@@ -17,10 +17,10 @@
       "bundleIdentifier": "com.jorgesousa.marketlist"
     },
     "android": {
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#7e22ce",
-        "versionCode": 1
+        "backgroundColor": "#7e22ce"
       },
       "package": "com.jorgesousa.marketlist"
     },
