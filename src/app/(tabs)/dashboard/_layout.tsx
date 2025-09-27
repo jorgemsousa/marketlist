@@ -22,9 +22,9 @@ export default function DashLayout() {
                 paddingBottom: -2,
                 
                 
-                bottom: 40,
-                left: 14,
-                right: 14,
+                bottom: 16,
+                left: 10,
+                right: 10,
                 elevation: 0,
                 height: 60,
             }           

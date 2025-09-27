@@ -9,34 +9,36 @@ export type Props = {
 export const Paginator = ({data, scrollX}: Props) => {
     const { width } = useWindowDimensions()
   return (
-    <View className="flex-1 flex-row h-16 justify-center items-center -mt-60">
-      {data.map((_: any, i: number) => {
-        const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
-        const dotWidth = scrollX.interpolate({
-          inputRange,
-          outputRange: [10, 20, 10],
-          extrapolate: 'clamp',
-        });
-        const opacity = scrollX.interpolate({
-          inputRange,
-          outputRange: [0.3, 1, 0.3],
-          extrapolate: 'clamp',
-        });
+    <View className="flex-1 justify-center items-center -mt-60">
+      <View className='flex-row mt-10'>
+        {data.map((_: any, i: number) => {
+          const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
+          const dotWidth = scrollX.interpolate({
+            inputRange,
+            outputRange: [10, 20, 10],
+            extrapolate: 'clamp',
+          });
+          const opacity = scrollX.interpolate({
+            inputRange,
+            outputRange: [0.3, 1, 0.3],
+            extrapolate: 'clamp',
+          });
 
-        return (
-          <Animated.View
-            key={i.toString()}
-            style={{
-              height: 10,
-              width: dotWidth,
-              backgroundColor: '#7e22ce',
-              borderRadius: 8,
-              marginHorizontal: 8,
-              opacity
-            }}
-          />
-        );
-      })}
+          return (
+            <Animated.View
+              key={i.toString()}
+              style={{
+                height: 10,
+                width: dotWidth,
+                backgroundColor: '#7e22ce',
+                borderRadius: 8,
+                marginHorizontal: 8,
+                opacity
+              }}
+            />
+          );
+        })}
+      </View>
     </View>
   )
 }

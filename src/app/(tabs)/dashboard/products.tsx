@@ -1,9 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, FlatList, Text, TouchableOpacity, TextInput, Alert, Image, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView, 
+  View, 
+  FlatList, 
+  Text, 
+  TouchableOpacity, 
+  TextInput, 
+  Alert, 
+  Image, 
+  Modal, 
+  ScrollView, 
+  KeyboardAvoidingView, 
+  Platform,
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import Header from "@/src/components/header";
 import { collection, addDoc, getDocs } from "firebase/firestore";
-import { db } from '@/src/database/firebaseConfig';
+import { auth, db } from '@/src/database/firebaseConfig';
+import { router } from 'expo-router';
+import SelectSetor from '@/src/components/picker';
 
 interface Product {
   id: string;
@@ -11,6 +26,21 @@ interface Product {
   imageUrl: string;
   type: string;
 }
+
+const setores = [
+  "Açougue",
+  "Frios e Laticínios",
+  "Hortifrúti",
+  "Padaria",
+  "Mercearia",
+  "Adega e Bebidas",
+  "Higiene Pessoal e Beleza",
+  "Limpeza Doméstica",
+  "Rotisseria",
+  "Pescados/Peixaria",
+  "Bazar"
+];
+
 
 const Products: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -32,6 +62,11 @@ const Products: React.FC = () => {
 
     const categories = Array.from(new Set(data.map(p => p.type)));
     setProductTypes(categories);
+  };
+
+  const signOut = () => {
+    auth.signOut();
+    router.replace('/login');
   };
 
   useEffect(() => {
@@ -103,7 +138,7 @@ const Products: React.FC = () => {
 
   return (
     <>
-      <Header title="Produtos" />
+      <Header title="Produtos" signOut={signOut}/>
       <SafeAreaView className="flex-1 p-4 bg-white">
         <View className="p-4 flex-row items-center justify-between mb-4">
           <Text className="text-xl font-bold text-purple-700">Produtos por categoria</Text>
@@ -116,9 +151,9 @@ const Products: React.FC = () => {
           data={productTypes}
           keyExtractor={item => item}
           renderItem={({ item }) => renderSection(item)}
+          showsVerticalScrollIndicator={false}
         />
 
-        {/* Modal de adição */}
         <Modal
           animationType="slide"
           transparent
@@ -132,25 +167,21 @@ const Products: React.FC = () => {
                   placeholder="Nome do produto"
                   value={newProductName}
                   onChangeText={setNewProductName}
-                  className="border-2 border-gray-300 rounded-full p-4 mb-4 bg-gray-100"
+                  className="border-2 border-purple-700 rounded-full p-4 mb-4 bg-gray-100"
                 />
                 <TextInput
                   placeholder="URL da imagem"
                   value={newProductImageUrl}
                   onChangeText={setNewProductImageUrl}
-                  className="border-2 border-gray-300 rounded-full p-4 mb-4 bg-gray-100"
+                  className="border-2 border-purple-700 rounded-full p-4 mb-4 bg-gray-100"
                 />
-                <TextInput
-                  placeholder="Tipo do produto (Alimento, Vestuário, etc.)"
-                  value={newProductType}
-                  onChangeText={setNewProductType}
-                  className="border-2 border-gray-300 rounded-full p-4 mb-4 bg-gray-100"
-                />
+                <SelectSetor value={newProductType} onChange={setNewProductType} />
+
                 <TouchableOpacity onPress={addProduct} className="bg-purple-700 p-3 rounded-full items-center mb-2 mt-4">
                   <Text className="text-white text-xl font-bold">Adicionar Produto</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setIsAdding(false)} className="bg-zinc-300 items-center rounded-full p-3">
-                  <Text className="text-zinc-500 text-xl font-semibold">Cancelar</Text>
+                <TouchableOpacity onPress={() => setIsAdding(false)} className='border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full'>
+                  <Text className="border-purple-700 text-xl text-purple-700 font-bold">Cancelar</Text>
                 </TouchableOpacity>
               </ScrollView>
             </KeyboardAvoidingView>

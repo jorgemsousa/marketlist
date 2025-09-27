@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
+import { View, Text, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import Auth from '../auth';
 
@@ -9,11 +9,7 @@ type Props = {
 };
 
 const LoginModal = ({ open, onClose }: Props) => {
-  const [modalVisible, setModalVisible] = useState(open);
-  const [email, setEmail] = useState('');
-  const [emailFocused, setEmailFocused] = useState(false);
-  const [password, setPassword] = useState('');
-  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [modalVisible, setModalVisible] = useState(open);  
   const { width, height} = useWindowDimensions()
   const slideAnim = useRef(new Animated.Value(300)).current;
 

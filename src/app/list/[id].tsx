@@ -12,7 +12,7 @@ import {
   Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { db } from "@/src/database/firebaseConfig";
+import { auth, db } from "@/src/database/firebaseConfig";
 import {
   doc,
   updateDoc,
@@ -35,29 +35,27 @@ interface Product {
 }
 
 export default function ListScreen() {
-  const { id } = useLocalSearchParams(); // ID da lista
+  const { id } = useLocalSearchParams();
   const [listName, setListName] = useState("");
   const [status, setStatus] = useState("open");
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
-
-  // Modal
   const [modalVisible, setModalVisible] = useState(false);
-
-  // Produtos disponíveis no catálogo
   const [availableProducts, setAvailableProducts] = useState<
     { id: string; name: string; imageUrl?: string; type: string }[]
   >([]);
 
-  // Inputs locais
   const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
   const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
 
-  // Buscar lista e itens já adicionados
+  const signOut = () => {
+    auth.signOut();
+    router.replace('/login');
+  };
+
   useEffect(() => {
     if (!id) return;
 
-    // Escuta documento da lista
     const unsubList = onSnapshot(doc(db, "lists", id as string), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -66,7 +64,6 @@ export default function ListScreen() {
       }
     });
 
-    // Escuta subcoleção ITEMS
     const itemsRef = collection(db, "lists", id as string, "items");
     const unsubItems = onSnapshot(itemsRef, (snapshot) => {
       const items = snapshot.docs.map((d) => ({
@@ -76,7 +73,6 @@ export default function ListScreen() {
 
       setProducts(items);
 
-      // inicializa inputs
       const newPriceMap: Record<string, string> = {};
       const newQtyMap: Record<string, string> = {};
       items.forEach((it) => {
@@ -93,7 +89,6 @@ export default function ListScreen() {
     };
   }, [id]);
 
-  // Buscar catálogo de produtos
   useEffect(() => {
     const fetchProducts = async () => {
       const snap = await getDocs(collection(db, "products"));
@@ -113,7 +108,6 @@ export default function ListScreen() {
     fetchProducts();
   }, []);
 
-  // Calcular total
   useEffect(() => {
     const totalValue = products.reduce(
       (sum, p) => sum + (Number(p.quantity) || 0) * (Number(p.price) || 0),
@@ -128,7 +122,6 @@ export default function ListScreen() {
     return cleaned.replace(/,/g, ".");
   };
 
-  // Atualizar item no Firestore
   const handleSaveProduct = async (productId: string) => {
     if (!id) return;
     const rawQty = qtyInputs[productId] ?? "0";
@@ -145,7 +138,6 @@ export default function ListScreen() {
     }
   };
 
-  // Adicionar produto escolhido
   const handleSelectProduct = async (product: {
     id: string;
     name: string;
@@ -166,7 +158,6 @@ export default function ListScreen() {
     }
   };
 
-  // Remover produto
   const handleRemoveProduct = (productId: string) => {
     if (!id) return;
     Alert.alert(
@@ -190,7 +181,6 @@ export default function ListScreen() {
     );
   };
 
-  // Finalizar lista
   const handleFinalizeList = async () => {
     try {
       if (!id) return;
@@ -212,10 +202,9 @@ export default function ListScreen() {
 
   return (
     <>
-      <Header title={listName} />
+      <Header title={listName} signOut={signOut}/>
       <Container>
         <View className="flex-1 bg-white p-2">
-          {/* FAB - Finalizar */}
           <TouchableOpacity
             onPress={handleFinalizeList}
             className="absolute top-2 right-2 bg-purple-700 px-3 py-1 rounded-md"
@@ -223,7 +212,6 @@ export default function ListScreen() {
             <Text className="text-white text-sm">Finalizar compras</Text>
           </TouchableOpacity>
 
-          {/* Cabeçalho */}
           <View className="flex-row justify-between items-center mt-10 mb-4">
             <Text className="text-base font-bold text-purple-700">
               {listName}
@@ -233,14 +221,13 @@ export default function ListScreen() {
             </Text>
           </View>
 
-          {/* Lista de itens */}
-          <ScrollView className="flex-1">
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
             {products.map((p) => (
               <View
                 key={p.id}
                 className="flex-row bg-zinc-100 justify-between p-2 rounded-xl mb-3"
               >
-                <View className="flex-row items-center">
+                <View className="flex-row items-center w-30">
                   <Text className="text-purple-700 text-sm">{p.name}</Text>
                 </View>
 
@@ -284,7 +271,6 @@ export default function ListScreen() {
             ))}
           </ScrollView>
 
-          {/* Botão abrir modal */}
           <TouchableOpacity
             className="bg-purple-700 rounded-full items-center mt-4 p-3"
             onPress={() => setModalVisible(true)}
@@ -292,10 +278,9 @@ export default function ListScreen() {
             <Text className="text-white font-bold text-xl">Adicionar Produto</Text>
           </TouchableOpacity>
 
-          {/* Modal de seleção */}
         <Modal visible={modalVisible} transparent animationType="slide">
           <View className="flex-1 justify-center items-center bg-black/50">
-            <View className="bg-white p-4 rounded-2xl w-11/12 max-h-[80%]">
+            <View className="bg-white p-4 rounded-2xl w-11/12 max-h-[90%]">
               <Text className="text-lg font-bold mb-4 text-purple-700">
                 Selecione um Produto
               </Text>

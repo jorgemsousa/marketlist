@@ -46,7 +46,7 @@ export const NextButton = ({ percentage, scrollTo }: Props) => {
   }, []);
 
   return (
-    <View className='flex-1 justify-center items-center mb-20'>
+    <View className='flex-1 justify-center items-center mb-5'>
       <Svg width={size} height={size}>
         <G rotation="-90" origin={center}>
           <Circle 

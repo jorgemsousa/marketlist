@@ -56,6 +56,11 @@ const Orders: React.FC = () => {
     }
   };
 
+  const signOut = () => {
+    auth.signOut();
+    router.replace('/login');
+  };
+
   useEffect(() => {
     fetchListas();
   }, []);
@@ -94,7 +99,7 @@ const Orders: React.FC = () => {
 
   return (
     <>
-    <Header title="Listas de Compras" signOut={() => {}} />
+    <Header title="Listas de Compras" signOut={signOut} />
     <Container>
       <SafeAreaView className="flex-1 x-4 bg-white">
         {/* Cabeçalho + botão de criar */}

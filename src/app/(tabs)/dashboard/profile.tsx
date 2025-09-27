@@ -11,6 +11,7 @@ import {
 import { collection, query, getDocs, where, limit } from "firebase/firestore";
 import Header from "@/src/components/header";
 import { auth, db } from "@/src/database/firebaseConfig";
+import { router } from "expo-router";
 
 interface UserProps {
   email: string,
@@ -21,6 +22,11 @@ interface UserProps {
 const Profile = () => {
   const [userData, setUserData] = useState<UserProps | null>(null);
   const [editando, setEditando] = useState(false);
+  
+  const signOut = () => {
+    auth.signOut();
+    router.replace('/login');
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -30,11 +36,8 @@ const Profile = () => {
         const snapshot = await getDocs(q);
 
         if (!snapshot.empty) {
-          // Pega só o primeiro usuário encontrado
           const userDoc = snapshot.docs[0];
           const data = userDoc.data();
-
-          console.log("Usuário:", data);
 
           setUserData(data as UserProps)
 
@@ -56,7 +59,7 @@ const Profile = () => {
 
   return (
     <>
-      <Header title="Perfil" signOut={() => {}} />
+      <Header title="Perfil" signOut={signOut} />
       <View className="flex-1 p-4 bg-white">
         <View className="items-center mb-16">
         

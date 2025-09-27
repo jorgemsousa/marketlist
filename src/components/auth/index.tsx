@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/src/database/firebaseConfig';
@@ -13,33 +13,34 @@ const Auth = ({ onClose }: Props) => {
   const [emailFocused, setEmailFocused] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordFocused, setPasswordFocused] = useState(false);
-  
-  
-  
-  async function handleSignIn() {    
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        console.log('Usuário autenticado:', user);
-        router.replace('/dashboard');    
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.error('Erro ao autenticar usuário:', errorCode, errorMessage);
-      });
-    onClose();
+  const [loading, setLoading] = useState(false); 
+
+  async function handleSignIn() {
+    setLoading(true); 
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      Alert.alert("Muito bom ter você de volta, aproveite as compras!")
+      router.push('/dashboard');
+      onClose();
+    } catch (error: any) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      console.error('Erro ao autenticar usuário:', errorCode, errorMessage);
+      setLoading(false); 
+    }
   }
 
-  return (        
-    <View>         
+  return (
+    <View>
       <TextInput
         placeholder="E-mail"
         keyboardType="email-address"
         onFocus={() => setEmailFocused(true)}
         onBlur={() => setEmailFocused(false)}
         onChangeText={setEmail}
-        className={`border-2 ${emailFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-4 mb-4 bg-gray-100`}
+        className={`border-2 ${emailFocused ? 'border-purple-700' : 'border-gray-300'} rounded-full px-4 py-4 mb-4 bg-gray-100`}
+        editable={!loading}
       />
       <TextInput
         placeholder="Senha"
@@ -47,24 +48,31 @@ const Auth = ({ onClose }: Props) => {
         onFocus={() => setPasswordFocused(true)}
         onBlur={() => setPasswordFocused(false)}
         onChangeText={setPassword}
-        className={`border-2 ${passwordFocused ? 'border-purple-700': 'border-gray-300'} rounded-full px-4 py-4 mb-4 bg-gray-100`}       
+        className={`border-2 ${passwordFocused ? 'border-purple-700' : 'border-gray-300'} rounded-full px-4 py-4 mb-4 bg-gray-100`}
+        editable={!loading}
       />
-      <TouchableOpacity onPress={() => {
-        onClose();
-        handleSignIn()
-      }} 
-        className='bg-purple-700 p-4 rounded-full mb-20'>
-        <Text className='text-white font-bold text-center text-lg'>Entrar</Text>
+      <TouchableOpacity
+        onPress={handleSignIn}
+        className='bg-purple-700 p-4 rounded-full mb-20'
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text className='text-white font-bold text-center text-lg'>Entrar</Text>
+        )}
       </TouchableOpacity>
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => {
           onClose();
-        }} 
+        }}
         className='border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full'
+        disabled={loading}
       >
         <Text className='text-purple-700 font-bold text-center text-lg'>Cancelar</Text>
       </TouchableOpacity>
-    </View>      
+    </View>
   );
 };
+
 export default Auth;
