@@ -204,7 +204,7 @@ export default function ListScreen() {
     <>
       <Header title={listName} signOut={signOut}/>
       <Container>
-        <View className="flex-1 bg-white p-2">
+        <View className="flex-1 bg-white">
           <TouchableOpacity
             onPress={handleFinalizeList}
             className="absolute top-2 right-2 bg-purple-700 px-3 py-1 rounded-md"
@@ -228,7 +228,13 @@ export default function ListScreen() {
                 className="flex-row bg-zinc-100 justify-between p-2 rounded-xl mb-3"
               >
                 <View className="flex-row items-center w-30">
-                  <Text className="text-purple-700 text-sm">{p.name}</Text>
+                  <Text 
+                    className="text-purple-700 text-sm"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {p.name}
+                  </Text>
                 </View>
 
                 <View className="flex-row items-center mt-2">

@@ -69,6 +69,9 @@ const Products: React.FC = () => {
     router.replace('/login');
   };
 
+  const fallbackImage = require("../../../../assets/images/icon.png")
+;
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -125,7 +128,7 @@ const Products: React.FC = () => {
           renderItem={({ item }) => (
             <View style={{ marginRight: 16, alignItems: 'center' }}>
               <Image
-                source={{ uri: item.imageUrl }}
+                source={!item.imageUrl ? fallbackImage : { uri: item.imageUrl }}
                 style={{ width: 100, height: 100, borderRadius: 8 }}
               />
               <Text className="text-center mt-2 text-zinc-500">{item.name}</Text>
