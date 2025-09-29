@@ -1,6 +1,12 @@
-import React from 'react';
-import { StyleSheet } from 'react-native';
-import RNPickerSelect from 'react-native-picker-select';
+import React, { useState } from 'react';
+import {
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  FlatList,
+} from 'react-native';
 
 const setores = [
   { label: 'Açougue', value: 'Açougue' },
@@ -22,41 +28,101 @@ type SelectSetorProps = {
 };
 
 export default function SelectSetor({ value, onChange }: SelectSetorProps) {
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const handleSelect = (selectedValue: string) => {
+    onChange(selectedValue);
+    setModalVisible(false);
+  };
+
   return (
-    <RNPickerSelect
-      onValueChange={onChange}
-      items={setores}
-      placeholder={{ label: 'Selecione o setor...', value: '' }}
-      style={pickerSelectStyles}
-      value={value}
-      useNativeAndroidPickerStyle={false}
-    />
+    <View>
+      <TouchableOpacity
+        style={styles.input}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={styles.inputText}>
+          {value || 'Selecione o setor...'}
+        </Text>
+      </TouchableOpacity>
+
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <FlatList
+              data={setores}
+              keyExtractor={(item) => item.value}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.option}
+                  onPress={() => handleSelect(item.value)}
+                >
+                  <Text style={styles.optionText}>{item.label}</Text>
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
-const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
+const styles = StyleSheet.create({
+  input: {
     fontSize: 16,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderWidth: 2,
     borderColor: '#7e22ce',
     borderRadius: 25,
-    color: '#3f3e3eff',
-    paddingRight: 30,
     backgroundColor: '#F3F4F6',
     marginBottom: 16,
   },
-  inputAndroid: {
-    fontSize: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 2,
-    borderColor: '#7e22ce',
-    borderRadius: 25,
+  inputText: {
     color: '#3f3e3eff',
-    paddingRight: 30,
-    backgroundColor: '#F3F4F6',
-    marginBottom: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 16,
+  },
+  option: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#3f3e3eff',
+  },
+  closeButton: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#7e22ce',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
