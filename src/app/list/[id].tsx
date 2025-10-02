@@ -50,7 +50,7 @@ export default function ListScreen() {
 
   const signOut = () => {
     auth.signOut();
-    router.replace('/login');
+    router.replace("/login");
   };
 
   useEffect(() => {
@@ -70,6 +70,12 @@ export default function ListScreen() {
         id: d.id,
         ...(d.data() as any),
       })) as Product[];
+
+      const sortedItems = items.sort((a, b) => {
+        if (a.done && !b.done) return 1;
+        if (!a.done && b.done) return -1;
+        return 0;
+      });
 
       setProducts(items);
 
@@ -132,7 +138,7 @@ export default function ListScreen() {
 
     try {
       const productRef = doc(db, "lists", id as string, "items", productId);
-      await updateDoc(productRef, { quantity: qty, price: price });
+      await updateDoc(productRef, { quantity: qty, price: price, done: true });
     } catch (err) {
       console.error("Erro ao salvar produto:", err);
     }
@@ -170,7 +176,13 @@ export default function ListScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              const productRef = doc(db, "lists", id as string, "items", productId);
+              const productRef = doc(
+                db,
+                "lists",
+                id as string,
+                "items",
+                productId
+              );
               await deleteDoc(productRef);
             } catch (err) {
               console.error("Erro ao remover produto:", err);
@@ -202,7 +214,7 @@ export default function ListScreen() {
 
   return (
     <>
-      <Header title={listName} signOut={signOut}/>
+      <Header title={listName} signOut={signOut} />
       <Container>
         <View className="flex-1 bg-white">
           <TouchableOpacity
@@ -216,7 +228,7 @@ export default function ListScreen() {
             <Text className="text-base font-bold text-purple-700">
               {listName}
             </Text>
-            <Text className="text-base font-semibold">
+            <Text className="text-xl text-green-900 font-semibold">
               Total: R$ {total.toFixed(2)}
             </Text>
           </View>
@@ -227,9 +239,13 @@ export default function ListScreen() {
                 key={p.id}
                 className="flex-row bg-zinc-100 justify-between p-2 rounded-xl mb-3"
               >
-                <View className="flex-row items-center w-30">
-                  <Text 
-                    className="text-purple-700 text-sm"
+                <View className="flex-row items-center w-1/4">
+                  <Text
+                    className={
+                      p.done
+                        ? "text-green-800 text-sm"
+                        : "text-purple-700 text-sm"
+                    }
                     numberOfLines={1}
                     ellipsizeMode="tail"
                   >
@@ -251,7 +267,9 @@ export default function ListScreen() {
                   />
                   <TextInput
                     className="py-1 text-center w-20 mr-2 rounded-md bg-zinc-200"
-                    keyboardType={Platform.OS === "ios" ? "decimal-pad" : "numeric"}
+                    keyboardType={
+                      Platform.OS === "ios" ? "decimal-pad" : "numeric"
+                    }
                     value={priceInputs[p.id]}
                     onChangeText={(text) =>
                       setPriceInputs((prev) => ({
@@ -267,11 +285,11 @@ export default function ListScreen() {
                     <Text className="text-white text-sm">Salvar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                      className="bg-red-600 px-3 py-1 rounded-md mx-1"
-                      onPress={() => handleRemoveProduct(p.id)}
-                    >
-                      <Text className="text-white text-sm font-bold">X</Text>
-                    </TouchableOpacity>
+                    className="bg-red-600 px-3 py-1 rounded-md mx-1"
+                    onPress={() => handleRemoveProduct(p.id)}
+                  >
+                    <Text className="text-white text-sm font-bold">X</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             ))}
@@ -281,58 +299,61 @@ export default function ListScreen() {
             className="bg-purple-700 rounded-full items-center mt-4 p-3"
             onPress={() => setModalVisible(true)}
           >
-            <Text className="text-white font-bold text-xl">Adicionar Produto</Text>
+            <Text className="text-white font-bold text-xl">
+              Adicionar Produto
+            </Text>
           </TouchableOpacity>
 
-        <Modal visible={modalVisible} transparent animationType="slide">
-          <View className="flex-1 justify-center items-center bg-black/50">
-            <View className="bg-white p-4 rounded-2xl w-11/12 max-h-[90%]">
-              <Text className="text-lg font-bold mb-4 text-purple-700">
-                Selecione um Produto
-              </Text>
+          <Modal visible={modalVisible} transparent animationType="slide">
+            <View className="flex-1 justify-center items-center bg-black/50">
+              <View className="bg-white p-4 rounded-2xl w-11/12 max-h-[90%]">
+                <Text className="text-lg font-bold mb-4 text-purple-700">
+                  Selecione um Produto
+                </Text>
 
-              <SectionList
-                sections={Object.values(
-                  availableProducts.reduce((acc, item) => {
-                    const type = item.type || "Outros";
-                    if (!acc[type]) acc[type] = { title: type, data: [] };
-                    acc[type].data.push(item);
-                    return acc;
-                  }, {} as Record<string, { title: string; data: typeof availableProducts }>)
-                )}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    className="flex-row items-center p-3 border-b border-gray-200"
-                    onPress={() => handleSelectProduct(item)}
-                  >
-                    {item.imageUrl && (
-                      <Image
-                        source={{ uri: item.imageUrl }}
-                        className="w-10 h-10 rounded-md mr-3"
-                      />
-                    )}
-                    <Text className="text-purple-700">{item.name}</Text>
-                  </TouchableOpacity>
-                )}
-                renderSectionHeader={({ section: { title } }) => (
-                  <Text className="text-base font-bold bg-gray-100 px-2 py-1 text-purple-700">
-                    {title}
+                <SectionList
+                  sections={Object.values(
+                    availableProducts.reduce((acc, item) => {
+                      const type = item.type || "Outros";
+                      if (!acc[type]) acc[type] = { title: type, data: [] };
+                      acc[type].data.push(item);
+                      return acc;
+                    }, {} as Record<string, { title: string; data: typeof availableProducts }>)
+                  )}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      className="flex-row items-center p-3 border-b border-gray-200"
+                      onPress={() => handleSelectProduct(item)}
+                    >
+                      {item.imageUrl && (
+                        <Image
+                          source={{ uri: item.imageUrl }}
+                          className="w-10 h-10 rounded-md mr-3"
+                        />
+                      )}
+                      <Text className="text-purple-700">{item.name}</Text>
+                    </TouchableOpacity>
+                  )}
+                  renderSectionHeader={({ section: { title } }) => (
+                    <Text className="text-base font-bold bg-gray-100 px-2 py-1 text-purple-700">
+                      {title}
+                    </Text>
+                  )}
+                  style={{ maxHeight: 320 }}
+                />
+
+                <TouchableOpacity
+                  className="border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full"
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text className="text-purple-700 font-bold text-center">
+                    Fechar
                   </Text>
-                )}
-                style={{ maxHeight: 320 }}
-              />
-
-              <TouchableOpacity
-                className="border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full"
-                onPress={() => setModalVisible(false)}
-              >
-                <Text className="text-purple-700 font-bold text-center">Fechar</Text>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </Modal>
-
+          </Modal>
         </View>
       </Container>
     </>
