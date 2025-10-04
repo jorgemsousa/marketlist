@@ -75,15 +75,17 @@ const Dashboard = () => {
     const q = query(listsRef, where("uid", "==", auth.currentUser?.uid));
 
     const unsub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().name || "Sem nome",
-        total: Number(doc.data().total) || 0,
-        status: doc.data().status || "open",
-      }));
+      const data = snapshot.docs.map((doc) => {
+        const raw = doc.data();
+        return {
+          id: doc.id,
+          name: raw.name ?? "Sem nome",
+          total: parseFloat(raw.total ?? raw.total_value ?? 0),
+          status: (raw.status ?? "open").toLowerCase(),
+        };
+      });
       setLists(data);
     });
-
     return () => unsub();
   }, []);
 
@@ -104,11 +106,11 @@ const Dashboard = () => {
       {session && session.user ? (
         <>
           <Header title="Dashboard" signOut={signOut} />
-          <SafeAreaView className="flex-1 bg-white px-6">
+          <SafeAreaView className="flex-1 bg-white">
             <Text className="text-purple-700 text-center font-bold text-md m-4">
               Gráfico de gastos
             </Text>
-            <View style={{ height: 300, width: "auto", padding: 16 }}>
+            <View style={{ height: 300, width: "auto", padding: 8 }}>
               {chartData.length > 0 ? (
                 <CartesianChart
                   data={chartData}
@@ -142,6 +144,20 @@ const Dashboard = () => {
                           colors={["#ac24db", "#ac20db00"]}
                         />
                       </Area>
+
+                      {/* 🔵 Desenha um ponto visível mesmo se houver só um */}
+                      {points.total.map((p, i) => (
+                        <React.Fragment key={i}>
+                          <Line
+                            points={[
+                              { x: p.x - 2, y: p.y - 2 },
+                              { x: p.x + 2, y: p.y + 2 },
+                            ]}
+                            color="#ac24db"
+                            strokeWidth={6}
+                          />
+                        </React.Fragment>
+                      ))}
                     </>
                   )}
                 </CartesianChart>

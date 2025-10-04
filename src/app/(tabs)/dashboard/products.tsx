@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, 
-  View, 
-  FlatList, 
-  Text, 
-  TouchableOpacity, 
-  TextInput, 
-  Alert, 
-  Image, 
-  Modal, 
-  ScrollView, 
-  KeyboardAvoidingView, 
+import React, { useState, useEffect } from "react";
+import {
+  SafeAreaView,
+  View,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  Image,
+  Modal,
+  ScrollView,
+  KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { Ionicons } from '@expo/vector-icons';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import Header from "@/src/components/header";
 import { collection, addDoc, getDocs } from "firebase/firestore";
-import { auth, db } from '@/src/database/firebaseConfig';
-import { router } from 'expo-router';
-import SelectSetor from '@/src/components/picker';
+import { auth, db } from "@/src/database/firebaseConfig";
+import { router } from "expo-router";
+import SelectSetor from "@/src/components/picker";
 
 interface Product {
   id: string;
@@ -38,21 +38,20 @@ const setores = [
   "Limpeza Doméstica",
   "Rotisseria",
   "Pescados/Peixaria",
-  "Bazar"
+  "Bazar",
 ];
-
 
 const Products: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [newProductName, setNewProductName] = useState('');
-  const [newProductImageUrl, setNewProductImageUrl] = useState('');
-  const [newProductType, setNewProductType] = useState('');
+  const [newProductName, setNewProductName] = useState("");
+  const [newProductImageUrl, setNewProductImageUrl] = useState("");
+  const [newProductType, setNewProductType] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [productTypes, setProductTypes] = useState<string[]>([]);
 
   const fetchProducts = async () => {
     const snapshot = await getDocs(collection(db, "products"));
-    const data: Product[] = snapshot.docs.map(doc => ({
+    const data: Product[] = snapshot.docs.map((doc) => ({
       id: doc.id,
       name: doc.data().name,
       imageUrl: doc.data().imageUrl,
@@ -60,25 +59,23 @@ const Products: React.FC = () => {
     }));
     setProducts(data);
 
-    const categories = Array.from(new Set(data.map(p => p.type)));
+    const categories = Array.from(new Set(data.map((p) => p.type)));
     setProductTypes(categories);
   };
 
   const signOut = () => {
     auth.signOut();
-    router.replace('/login');
+    router.replace("/login");
   };
 
-  const fallbackImage = require("../../../../assets/images/icon.png")
-;
-
+  const fallbackImage = require("../../../../assets/images/icon.png");
   useEffect(() => {
     fetchProducts();
   }, []);
 
   const addProduct = async () => {
     if (!newProductName || !newProductImageUrl || !newProductType) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      Alert.alert("Erro", "Por favor, preencha todos os campos.");
       return;
     }
 
@@ -101,20 +98,20 @@ const Products: React.FC = () => {
       const categories = Array.from(new Set([...productTypes, newProductType]));
       setProductTypes(categories);
 
-      setNewProductName('');
-      setNewProductImageUrl('');
-      setNewProductType('');
+      setNewProductName("");
+      setNewProductImageUrl("");
+      setNewProductType("");
       setIsAdding(false);
 
-      Alert.alert('Sucesso', 'Produto adicionado com sucesso!');
+      Alert.alert("Sucesso", "Produto adicionado com sucesso!");
     } catch (err) {
       console.error(err);
-      Alert.alert('Erro', 'Não foi possível adicionar o produto.');
+      Alert.alert("Erro", "Não foi possível adicionar o produto.");
     }
   };
 
   const renderSection = (type: string) => {
-    const sectionProducts = products.filter(p => p.type === type);
+    const sectionProducts = products.filter((p) => p.type === type);
     if (sectionProducts.length === 0) return null;
 
     return (
@@ -123,15 +120,17 @@ const Products: React.FC = () => {
         <FlatList
           data={sectionProducts}
           horizontal
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
           showsHorizontalScrollIndicator={false}
           renderItem={({ item }) => (
-            <View style={{ marginRight: 16, alignItems: 'center' }}>
+            <View style={{ marginRight: 16, alignItems: "center" }}>
               <Image
                 source={!item.imageUrl ? fallbackImage : { uri: item.imageUrl }}
                 style={{ width: 100, height: 100, borderRadius: 8 }}
               />
-              <Text className="text-center mt-2 text-zinc-500">{item.name}</Text>
+              <Text className="text-center mt-2 text-zinc-500">
+                {item.name}
+              </Text>
             </View>
           )}
         />
@@ -141,18 +140,23 @@ const Products: React.FC = () => {
 
   return (
     <>
-      <Header title="Produtos" signOut={signOut}/>
+      <Header title="Produtos" signOut={signOut} />
       <SafeAreaView className="flex-1 p-4 bg-white">
         <View className="p-4 flex-row items-center justify-between mb-4">
-          <Text className="text-xl font-bold text-purple-700">Produtos por categoria</Text>
-          <TouchableOpacity onPress={() => setIsAdding(true)} className="bg-purple-700 p-2 rounded-lg">
+          <Text className="text-xl font-bold text-purple-700">
+            Produtos por categoria
+          </Text>
+          <TouchableOpacity
+            onPress={() => setIsAdding(true)}
+            className="bg-purple-700 p-2 rounded-lg"
+          >
             <Ionicons name="add" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
 
         <FlatList
           data={productTypes}
-          keyExtractor={item => item}
+          keyExtractor={(item) => item}
           renderItem={({ item }) => renderSection(item)}
           showsVerticalScrollIndicator={false}
         />
@@ -164,8 +168,17 @@ const Products: React.FC = () => {
           onRequestClose={() => setIsAdding(false)}
         >
           <View className="flex-1 justify-center items-center bg-black/50 p-4">
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="w-full">
-              <ScrollView contentContainerStyle={{ backgroundColor: 'white', borderRadius: 24, padding: 20 }}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              className="w-full"
+            >
+              <ScrollView
+                contentContainerStyle={{
+                  backgroundColor: "white",
+                  borderRadius: 24,
+                  padding: 20,
+                }}
+              >
                 <TextInput
                   placeholder="Nome do produto"
                   value={newProductName}
@@ -178,13 +191,26 @@ const Products: React.FC = () => {
                   onChangeText={setNewProductImageUrl}
                   className="border-2 border-purple-700 rounded-full p-4 mb-4 bg-gray-100"
                 />
-                <SelectSetor value={newProductType} onChange={setNewProductType} />
+                <SelectSetor
+                  value={newProductType}
+                  onChange={setNewProductType}
+                />
 
-                <TouchableOpacity onPress={addProduct} className="bg-purple-700 p-3 rounded-full items-center mb-2 mt-4">
-                  <Text className="text-white text-xl font-bold">Adicionar Produto</Text>
+                <TouchableOpacity
+                  onPress={addProduct}
+                  className="bg-purple-700 p-3 rounded-full items-center mb-2 mt-4"
+                >
+                  <Text className="text-white text-xl font-bold">
+                    Adicionar Produto
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setIsAdding(false)} className='border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full'>
-                  <Text className="border-purple-700 text-xl text-purple-700 font-bold">Cancelar</Text>
+                <TouchableOpacity
+                  onPress={() => setIsAdding(false)}
+                  className="border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full"
+                >
+                  <Text className="border-purple-700 text-xl text-purple-700 font-bold">
+                    Cancelar
+                  </Text>
                 </TouchableOpacity>
               </ScrollView>
             </KeyboardAvoidingView>
