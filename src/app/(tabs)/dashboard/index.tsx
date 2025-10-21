@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   FlatList,
   SafeAreaView,
@@ -20,24 +20,20 @@ import {
 import { db } from "@/src/database/firebaseConfig";
 import { CartesianChart, Line, Area } from "victory-native";
 import { router } from "expo-router";
-import { LinearGradient, useFont, vec } from "@shopify/react-native-skia";
+import { LinearGradient, vec } from "@shopify/react-native-skia"; // ← Removido useFont
 import Header from "@/src/components/header";
 import Login from "../../login";
-
-const mono = require("../../../../assets/fonts/SpaceMono-Regular.ttf");
+// ← REMOVIDO: Não precisa do require do TTF nem useFont
 
 const Dashboard = () => {
   const auth = getAuth();
   const [session, setSession] = useState<{ user: any } | null>(null);
-  const [lists, setLists] = useState<any[]>([]); // listas do Firestore
-
+  const [lists, setLists] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedList, setSelectedList] = useState<any | null>(null);
   const [items, setItems] = useState<any[]>([]);
-
-  const font = useFont(mono, 12);
+  // ← REMOVIDO: const font = useFont(...); – usa system font agora
   const colorMode = useColorScheme();
-
   const labelColor = colorMode === "dark" ? "#fff" : "#000";
   const lineColor = colorMode === "dark" ? "lightgrey" : "#000";
 
@@ -61,7 +57,6 @@ const Dashboard = () => {
     }
   };
 
-  // Monitorar autenticação
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) setSession({ user });
@@ -69,11 +64,9 @@ const Dashboard = () => {
     });
   }, []);
 
-  // Buscar listas do Firestore
   useEffect(() => {
     const listsRef = collection(db, "lists");
     const q = query(listsRef, where("uid", "==", auth.currentUser?.uid));
-
     const unsub = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => {
         const raw = doc.data();
@@ -82,6 +75,7 @@ const Dashboard = () => {
           name: raw.name ?? "Sem nome",
           total: parseFloat(raw.total ?? raw.total_value ?? 0),
           status: (raw.status ?? "open").toLowerCase(),
+          closed: raw?.updatedAt?.toString(),
         };
       });
       setLists(data);
@@ -89,17 +83,70 @@ const Dashboard = () => {
     return () => unsub();
   }, []);
 
-  // Separar listas abertas e fechadas
   const openLists = lists.filter((l) => l.status === "open");
   const closedLists = lists.filter((l) => l.status === "finalizada");
 
-  // Preparar dados para gráfico (somente listas fechadas)
-  const chartData = closedLists
-    .filter((l) => l.name && l.name.trim() !== "")
-    .map((l) => ({
-      label: l.name,
-      total: Number(l.total) || 0,
-    }));
+  const parseTimestampString = (str) => {
+    const match = str.match(/seconds=(\d+),\s*nanoseconds=(\d+)/);
+    if (!match) return null;
+    const seconds = parseInt(match[1]);
+    const nanos = parseInt(match[2]);
+    const ms = seconds * 1000 + Math.floor(nanos / 1_000_000);
+    return new Date(ms);
+  };
+
+  const formatDateToString = (date) => {
+    if (!date) return "";
+    const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    return dateFormatter.format(date);
+  };
+
+  const chartData = useMemo(() => {
+    console.log(
+      "ClosedLists raw:",
+      closedLists.map((l) => ({
+        name: l.name,
+        closed: l.closed?.substring(0, 50) + "...",
+      }))
+    );
+    const filteredAndSorted = closedLists
+      .filter((l) => l.name && l.name.trim() !== "")
+      .sort((a, b) => {
+        const dateA = parseTimestampString(a.closed);
+        const dateB = parseTimestampString(b.closed);
+        return (dateA?.getTime() || 0) - (dateB?.getTime() || 0);
+      });
+    console.log(
+      "Filtered & Sorted:",
+      filteredAndSorted.map((l) => ({
+        name: l.name,
+        parsedDate: parseTimestampString(l.closed),
+      }))
+    );
+    const processedData = filteredAndSorted
+      .map((l) => {
+        const date = parseTimestampString(l.closed);
+        const label = date ? formatDateToString(date) : "Data inválida";
+        console.log(`Para ${l.name}: date=${date}, label="${label}"`);
+        return {
+          label,
+          total: Number(l.total) || 0,
+        };
+      })
+      .filter(
+        (item) =>
+          item.label &&
+          item.label !== "Data inválida" &&
+          item.total !== undefined
+      );
+    console.log("Final chartData:", processedData);
+    return processedData;
+  }, [closedLists]);
 
   return (
     <>
@@ -110,51 +157,70 @@ const Dashboard = () => {
             <Text className="text-purple-700 text-center font-bold text-md m-4">
               Gráfico de gastos
             </Text>
-            <View style={{ height: 300, width: "auto", padding: 8 }}>
+            <View style={{ height: 300, width: "auto", padding: 16 }}>
               {chartData.length > 0 ? (
                 <CartesianChart
                   data={chartData}
                   xKey="label"
                   yKeys={["total"]}
-                  domainPadding={{ top: 30 }}
-                  axisOptions={{
-                    font,
+                  domainPadding={{ left: 60, right: 60, top: 30, bottom: 50 }}
+                  // ← SYSTEM FONT: Omite font – usa default do sistema (Roboto/SF Pro)
+                  xAxis={{
+                    // font: null, // ← Opcional: força null pra system
                     labelColor,
-                    lineColor,
+                    labelRotate: -45, // Diagonal só no X
+                    formatXLabel: (label) => label || "",
+                    tickCount: chartData.length || 1,
+                    lineColor: "hsla(0, 0%, 0%, 0.25)",
+                    lineWidth: 1,
                   }}
+                  yAxis={[
+                    {
+                      // font: null, // ← Opcional: força null pra system
+                      labelColor,
+                      formatYLabel: (value) =>
+                        `R$ ${parseFloat(value).toFixed(0)}`,
+                      tickCount: 5,
+                      lineColor: "hsla(0, 0%, 0%, 0.25)",
+                      lineWidth: 1,
+                    },
+                  ]}
                 >
                   {({ points, chartBounds }) => (
                     <>
                       <Line
                         points={points.total}
-                        color={"#ac24db"}
+                        color="#ac24db"
                         strokeWidth={3}
-                        animate={{ type: "timing", duration: 500 }}
+                        animate={{ type: "timing", duration: 800 }}
                       />
                       <Area
                         points={points.total}
                         y0={chartBounds.bottom}
-                        animate={{ type: "timing", duration: 500 }}
-                        color={"#ac24db"}
-                        opacity={0.2}
+                        animate={{ type: "timing", duration: 800 }}
+                        color="#ac24db"
+                        opacity={0.3}
                       >
                         <LinearGradient
-                          start={vec(chartBounds.bottom, 200)}
-                          end={vec(chartBounds.bottom, chartBounds.bottom)}
-                          colors={["#ac24db", "#ac20db00"]}
+                          start={vec(0, chartBounds.top)}
+                          end={vec(0, chartBounds.bottom)}
+                          colors={["#ac24db", "rgba(172, 36, 219, 0.05)"]}
                         />
                       </Area>
-
-                      {/* 🔵 Desenha um ponto visível mesmo se houver só um */}
                       {points.total.map((p, i) => (
                         <React.Fragment key={i}>
                           <Line
                             points={[
-                              { x: p.x - 2, y: p.y - 2 },
-                              { x: p.x + 2, y: p.y + 2 },
+                              { x: p.x - 3, y: p.y - 3 },
+                              { x: p.x + 3, y: p.y + 3 },
                             ]}
                             color="#ac24db"
-                            strokeWidth={6}
+                            strokeWidth={8}
+                            animate={{
+                              type: "timing",
+                              duration: 800,
+                              delay: i * 100,
+                            }}
                           />
                         </React.Fragment>
                       ))}
@@ -162,12 +228,14 @@ const Dashboard = () => {
                   )}
                 </CartesianChart>
               ) : (
-                <Text className="text-center text-gray-500 mt-10">
-                  Nenhuma lista finalizada ainda
-                </Text>
+                <View className="flex-1 justify-center items-center">
+                  <Text className="text-center text-gray-500 text-lg font-semibold">
+                    Nenhuma lista finalizada ainda 😊{"\n"}Crie e finalize uma
+                    pra ver o gráfico!
+                  </Text>
+                </View>
               )}
             </View>
-
             <View style={{ flex: 1, paddingHorizontal: 16 }}>
               <Text className="text-purple-700 text-center font-bold text-md m-4">
                 Listas fechadas
@@ -201,7 +269,6 @@ const Dashboard = () => {
             <Text className="text-lg font-bold mb-4 text-purple-700">
               {selectedList?.name}
             </Text>
-
             <FlatList
               data={items}
               keyExtractor={(item) => item.id}
@@ -229,7 +296,6 @@ const Dashboard = () => {
                 </View>
               )}
             />
-
             <View className="flex-row mt-4 justify-between">
               <Text className="text-purple-700 font-bold text-right">
                 Total de itens:{" "}
@@ -239,7 +305,6 @@ const Dashboard = () => {
                 Total: R$ {selectedList?.total.toFixed(2)}
               </Text>
             </View>
-
             <TouchableOpacity
               className="border border-purple-700 items-center justify-center py-3 rounded-full mt-4"
               onPress={() => setModalVisible(false)}

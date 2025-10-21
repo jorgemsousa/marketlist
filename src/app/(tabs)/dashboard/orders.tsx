@@ -39,7 +39,11 @@ const Orders: React.FC = () => {
   const fetchListas = async () => {
     try {
       setLoading(true);
-      const q = query(collection(db, "lists"), where("status", "==", "open"), where("uid", "==", auth.currentUser?.uid));
+      const q = query(
+        collection(db, "lists"),
+        where("status", "==", "open"),
+        where("uid", "==", auth.currentUser?.uid)
+      );
       const snap = await getDocs(q);
       const data: List[] = snap.docs.map((d) => ({
         id: d.id,
@@ -58,7 +62,7 @@ const Orders: React.FC = () => {
 
   const signOut = () => {
     auth.signOut();
-    router.replace('/login');
+    router.replace("/login");
   };
 
   useEffect(() => {
@@ -83,7 +87,12 @@ const Orders: React.FC = () => {
 
       // atualiza estado localmente para refletir imediatamente
       setListas((prev) => [
-        { id: docRef.id, name: novaListaNome.trim(), total_value: 0, status: "open" },
+        {
+          id: docRef.id,
+          name: novaListaNome.trim(),
+          total_value: 0,
+          status: "open",
+        },
         ...prev,
       ]);
 
@@ -99,55 +108,61 @@ const Orders: React.FC = () => {
 
   return (
     <>
-    <Header title="Listas de Compras" signOut={signOut} />
-    <Container>
-      <SafeAreaView className="flex-1 x-4 bg-white">
-        {/* Cabeçalho + botão de criar */}
-        <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-purple-700 font-bold text-xl">Listas Abertas</Text>
-        </View>
+      <Header title="Listas de Compras" signOut={signOut} />
+      <Container>
+        <SafeAreaView className="flex-1 x-4 bg-white">
+          {/* Cabeçalho + botão de criar */}
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-purple-700 font-bold text-xl">
+              Listas Abertas
+            </Text>
+          </View>
 
-        {/* Input para nova lista + botão */}
-        <View className="mb-4">
-          <TextInput
-            placeholder="Nome da nova lista"
-            value={novaListaNome}
-            onChangeText={setNovaListaNome}
-            className="border-2 border-gray-300 rounded-full px-4 py-2 bg-gray-100"
-          />
-          <TouchableOpacity
-            onPress={adicionarLista}
-            className="bg-purple-700 mt-3 p-3 rounded-full items-center"
-          >
-            <Text className="text-white font-bold">Criar Lista</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Lista de listas abertas */}
-        <FlatList
-          data={listas}
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={
-            <View className="mt-8 items-center">
-              <Text className="text-gray-400">Nenhuma lista aberta</Text>
-            </View>
-          }
-          renderItem={({ item }) => (
+          {/* Input para nova lista + botão */}
+          <View className="mb-4">
+            <TextInput
+              placeholder="Nome da nova lista"
+              value={novaListaNome}
+              onChangeText={setNovaListaNome}
+              className="border-2 border-gray-300 rounded-full px-4 py-2 bg-gray-100"
+            />
             <TouchableOpacity
-              onPress={() => router.push(`/list/${item.id}`)}
-              className="flex-row items-center justify-between p-4 rounded-xl bg-zinc-100 mb-3"
+              onPress={adicionarLista}
+              className="bg-purple-700 mt-3 p-3 rounded-full items-center"
             >
-              <View>
-                <Text className="text-md text-purple-600 font-semibold">{item.name}</Text>
-                <Text className="text-sm text-purple-400">R$ {item.total_value?.toFixed(2)}</Text>
-              </View>
-
-              <Ionicons name="chevron-forward" size={20} color="#9333ea" />
+              <Text className="text-white font-bold">Criar Lista</Text>
             </TouchableOpacity>
-          )}
-        />
-      </SafeAreaView>
-    </Container>
+          </View>
+
+          {/* Lista de listas abertas */}
+          <FlatList
+            data={listas}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={
+              <View className="mt-8 items-center">
+                <Text className="text-gray-400">Nenhuma lista aberta</Text>
+              </View>
+            }
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => router.push(`/list/${item.id}`)}
+                className="flex-row items-center justify-between p-4 rounded-xl bg-zinc-100 mb-3"
+              >
+                <View>
+                  <Text className="text-md text-purple-600 font-semibold">
+                    {item.name}
+                  </Text>
+                  <Text className="text-sm text-purple-400">
+                    R$ {item.total_value?.toFixed(2)}
+                  </Text>
+                </View>
+
+                <Ionicons name="chevron-forward" size={20} color="#9333ea" />
+              </TouchableOpacity>
+            )}
+          />
+        </SafeAreaView>
+      </Container>
     </>
   );
 };

@@ -44,7 +44,6 @@ export default function ListScreen() {
   const [availableProducts, setAvailableProducts] = useState<
     { id: string; name: string; imageUrl?: string; type: string }[]
   >([]);
-
   const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
   const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
 
@@ -55,7 +54,6 @@ export default function ListScreen() {
 
   useEffect(() => {
     if (!id) return;
-
     const unsubList = onSnapshot(doc(db, "lists", id as string), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -63,22 +61,18 @@ export default function ListScreen() {
         setStatus(data.status);
       }
     });
-
     const itemsRef = collection(db, "lists", id as string, "items");
     const unsubItems = onSnapshot(itemsRef, (snapshot) => {
       const items = snapshot.docs.map((d) => ({
         id: d.id,
         ...(d.data() as any),
       })) as Product[];
-
       const sortedItems = items.sort((a, b) => {
         if (a.done && !b.done) return 1;
         if (!a.done && b.done) return -1;
         return 0;
       });
-
       setProducts(items);
-
       const newPriceMap: Record<string, string> = {};
       const newQtyMap: Record<string, string> = {};
       items.forEach((it) => {
@@ -88,7 +82,6 @@ export default function ListScreen() {
       setPriceInputs(newPriceMap);
       setQtyInputs(newQtyMap);
     });
-
     return () => {
       unsubList();
       unsubItems();
@@ -132,10 +125,8 @@ export default function ListScreen() {
     if (!id) return;
     const rawQty = qtyInputs[productId] ?? "0";
     const rawPrice = priceInputs[productId] ?? "0";
-
     const qty = parseInt(normalizeNumberString(rawQty)) || 0;
     const price = parseFloat(normalizeNumberString(rawPrice)) || 0;
-
     try {
       const productRef = doc(db, "lists", id as string, "items", productId);
       await updateDoc(productRef, { quantity: qty, price: price, done: true });
@@ -196,14 +187,12 @@ export default function ListScreen() {
   const handleFinalizeList = async () => {
     try {
       if (!id) return;
-
       const docRef = doc(db, "lists", id as string);
       await updateDoc(docRef, {
         status: "finalizada",
         total,
         updatedAt: new Date(),
       });
-
       Alert.alert("✅ Sucesso", "Lista finalizada com sucesso!");
       router.push("/(tabs)/dashboard");
     } catch (error) {
@@ -223,7 +212,6 @@ export default function ListScreen() {
           >
             <Text className="text-white text-sm">Finalizar compras</Text>
           </TouchableOpacity>
-
           <View className="flex-row justify-between items-center mt-10 mb-4">
             <Text className="text-base font-bold text-purple-700">
               {listName}
@@ -232,69 +220,71 @@ export default function ListScreen() {
               Total: R$ {total.toFixed(2)}
             </Text>
           </View>
-
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-            {products.map((p) => (
-              <View
-                key={p.id}
-                className="flex-row bg-zinc-100 justify-between p-2 rounded-xl mb-3"
-              >
-                <View className="flex-row items-center w-1/4">
-                  <Text
-                    className={
-                      p.done
-                        ? "text-green-800 text-sm"
-                        : "text-purple-700 text-sm"
-                    }
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {p.name}
-                  </Text>
-                </View>
+            {products.map((p) => {
+              // ← NOVA LÓGICA: Fundo verde só se quantity > 0 E price > 0
+              const isComplete = p.quantity > 0 && p.price > 0;
+              const backgroundClass = isComplete
+                ? "bg-green-300"
+                : "bg-zinc-100";
 
-                <View className="flex-row items-center mt-2">
-                  <TextInput
-                    className="py-1 text-center w-12 mr-2 rounded-md bg-zinc-200"
-                    keyboardType="numeric"
-                    value={qtyInputs[p.id]}
-                    onChangeText={(text) =>
-                      setQtyInputs((prev) => ({
-                        ...prev,
-                        [p.id]: text.replace(/[^0-9]/g, ""),
-                      }))
-                    }
-                  />
-                  <TextInput
-                    className="py-1 text-center w-20 mr-2 rounded-md bg-zinc-200"
-                    keyboardType={
-                      Platform.OS === "ios" ? "decimal-pad" : "numeric"
-                    }
-                    value={priceInputs[p.id]}
-                    onChangeText={(text) =>
-                      setPriceInputs((prev) => ({
-                        ...prev,
-                        [p.id]: text.replace(/[^0-9.,]/g, ""),
-                      }))
-                    }
-                  />
-                  <TouchableOpacity
-                    className="bg-purple-700 px-3 py-1 rounded-md"
-                    onPress={() => handleSaveProduct(p.id)}
-                  >
-                    <Text className="text-white text-sm">Salvar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className="bg-red-600 px-3 py-1 rounded-md mx-1"
-                    onPress={() => handleRemoveProduct(p.id)}
-                  >
-                    <Text className="text-white text-sm font-bold">X</Text>
-                  </TouchableOpacity>
+              return (
+                <View
+                  key={p.id}
+                  className={`flex-row justify-between p-2 rounded-xl mb-3 ${backgroundClass}`} // ← Fundo condicional
+                >
+                  <View className="flex-row items-center w-1/4">
+                    {/* ← Texto roxo fixo (sem lógica de done) */}
+                    <Text
+                      className="text-purple-700 text-sm"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {p.name}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center mt-2">
+                    <TextInput
+                      className="py-1 text-center w-12 mr-2 rounded-md bg-zinc-200"
+                      keyboardType="numeric"
+                      value={qtyInputs[p.id]}
+                      onChangeText={(text) =>
+                        setQtyInputs((prev) => ({
+                          ...prev,
+                          [p.id]: text.replace(/[^0-9]/g, ""),
+                        }))
+                      }
+                    />
+                    <TextInput
+                      className="py-1 text-center w-20 mr-2 rounded-md bg-zinc-200"
+                      keyboardType={
+                        Platform.OS === "ios" ? "decimal-pad" : "numeric"
+                      }
+                      value={priceInputs[p.id]}
+                      onChangeText={(text) =>
+                        setPriceInputs((prev) => ({
+                          ...prev,
+                          [p.id]: text.replace(/[^0-9.,]/g, ""),
+                        }))
+                      }
+                    />
+                    <TouchableOpacity
+                      className="bg-purple-700 px-3 py-1 rounded-md"
+                      onPress={() => handleSaveProduct(p.id)}
+                    >
+                      <Text className="text-white text-sm">Salvar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      className="bg-red-600 px-3 py-1 rounded-md mx-1"
+                      onPress={() => handleRemoveProduct(p.id)}
+                    >
+                      <Text className="text-white text-sm font-bold">X</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </ScrollView>
-
           <TouchableOpacity
             className="bg-purple-700 rounded-full items-center mt-4 p-3"
             onPress={() => setModalVisible(true)}
@@ -303,14 +293,12 @@ export default function ListScreen() {
               Adicionar Produto
             </Text>
           </TouchableOpacity>
-
           <Modal visible={modalVisible} transparent animationType="slide">
             <View className="flex-1 justify-center items-center bg-black/50">
               <View className="bg-white p-4 rounded-2xl w-11/12 max-h-[90%]">
                 <Text className="text-lg font-bold mb-4 text-purple-700">
                   Selecione um Produto
                 </Text>
-
                 <SectionList
                   sections={Object.values(
                     availableProducts.reduce((acc, item) => {
@@ -342,7 +330,6 @@ export default function ListScreen() {
                   )}
                   style={{ maxHeight: 320 }}
                 />
-
                 <TouchableOpacity
                   className="border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full"
                   onPress={() => setModalVisible(false)}
