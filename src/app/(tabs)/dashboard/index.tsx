@@ -96,12 +96,20 @@ const Dashboard = () => {
 
   // Funções de parse e format
   const parseTimestampString = (str) => {
-    const match = str.match(/seconds=(\d+),\s*nanoseconds=(\d+)/);
-    if (!match) return null;
-    const seconds = parseInt(match[1]);
-    const nanos = parseInt(match[2]);
-    const ms = seconds * 1000 + Math.floor(nanos / 1_000_000);
-    return new Date(ms);
+    if (!str) return null;
+    // Regex mais flexível pro Firestore Timestamp
+    const match = str.match(
+      /seconds(?:ec)?=(\d+)(?:,\s*nanoseconds(?:ec)?=(\d+))?/i
+    );
+    if (match) {
+      const seconds = parseInt(match[1]);
+      const nanos = parseInt(match[2] || "0");
+      const ms = seconds * 1000 + Math.floor(nanos / 1_000_000);
+      return new Date(ms);
+    }
+    // Fallback: tenta parse direto se for ISO string
+    const fallbackDate = new Date(str);
+    return isNaN(fallbackDate.getTime()) ? null : fallbackDate;
   };
 
   const formatDateToString = (date) => {
@@ -124,9 +132,10 @@ const Dashboard = () => {
     return dateStr; // Só a data, como você ajustou
   };
 
-  const formatXAxisLabel = (ms: number) => {
-    const date = new Date(ms);
-    // Formato curto para caber no eixo (ex: 12/Jan)
+  const formatXAxisLabel = (index) => {
+    const item = chartData[index];
+    if (!item) return "";
+    const date = new Date(item.timestamp);
     return date.toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
   };
 
@@ -137,16 +146,20 @@ const Dashboard = () => {
       .sort((a, b) => {
         const dateA = parseTimestampString(a.closed);
         const dateB = parseTimestampString(b.closed);
-        return (dateA?.getTime() || 0) - (dateB?.getTime() || 0);
+        const timeA = dateA?.getTime() || 0;
+        const timeB = dateB?.getTime() || 0;
+        return timeB - timeA; // Inverte pra mais recente primeiro (ajusta se quiser asc)
       });
 
     const processedData = filteredAndSorted
-      .map((l) => {
+      .map((l, index) => {
+        // index aqui!
         const date = parseTimestampString(l.closed);
         const timestamp = date ? date.getTime() : null;
         const label = date ? formatDateToString(date) : "Data inválida";
         return {
-          timestamp,
+          x: index, // Índice simples pra X
+          timestamp, // Mantém pro sort, mas não usa no chart
           label,
           total: Number(l.total) || 0,
         };
@@ -172,18 +185,18 @@ const Dashboard = () => {
             <Text className="text-purple-700 text-center font-bold text-md m-4">
               Gráfico de gastos
             </Text>
-            <View style={{ height: 300, width: "auto", padding: 16 }}>
+            <View className="h-[300] w-auto p-4">
               {chartData.length > 0 ? (
                 <CartesianChart
                   data={chartData}
-                  xKey="timestamp"
+                  xKey="x" // Muda pra "x" index!
                   yKeys={["total"]}
-                  domainPadding={{ left: 60, right: 60, top: 30, bottom: 80 }}
+                  domainPadding={{ left: 60, right: 60, top: 30, bottom: 120 }} // + bottom pra labels
                   axisOptions={{
-                    font,
+                    font: font || undefined,
                     labelColor: "#ac24db",
-                    formatXLabel: formatXAxisLabel,
-                    x: { labelCount: 5 },
+                    formatXLabel: (index) => chartData[index]?.label || "", // Pega label pelo index
+                    x: { labelCount: Math.min(5, chartData.length) },
                   }}
                 >
                   {({ points, chartBounds }) => (
