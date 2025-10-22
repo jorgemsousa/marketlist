@@ -1,3 +1,4 @@
+// ← Verifica se esse path tá certo!
 import React, { useEffect, useState, useMemo } from "react";
 import {
   FlatList,
@@ -20,19 +21,23 @@ import {
 import { db } from "@/src/database/firebaseConfig";
 import { CartesianChart, Line, Area } from "victory-native";
 import { router } from "expo-router";
-import { LinearGradient, vec } from "@shopify/react-native-skia"; // ← Removido useFont
+import { LinearGradient, useFont, vec } from "@shopify/react-native-skia";
 import Header from "@/src/components/header";
 import Login from "../../login";
-// ← REMOVIDO: Não precisa do require do TTF nem useFont
+import * as Font from "expo-font";
+import { RotateInDownLeft } from "react-native-reanimated";
 
 const Dashboard = () => {
   const auth = getAuth();
   const [session, setSession] = useState<{ user: any } | null>(null);
-  const [lists, setLists] = useState<any[]>([]);
+  const [lists, setLists] = useState<any[]>([]); // listas do Firestore
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedList, setSelectedList] = useState<any | null>(null);
   const [items, setItems] = useState<any[]>([]);
-  // ← REMOVIDO: const font = useFont(...); – usa system font agora
+  const font = useFont(
+    require("../../../../assets/fonts/SpaceMono-Regular.ttf"),
+    12
+  );
   const colorMode = useColorScheme();
   const labelColor = colorMode === "dark" ? "#fff" : "#000";
   const lineColor = colorMode === "dark" ? "lightgrey" : "#000";
@@ -57,6 +62,7 @@ const Dashboard = () => {
     }
   };
 
+  // Monitorar autenticação
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) setSession({ user });
@@ -64,6 +70,7 @@ const Dashboard = () => {
     });
   }, []);
 
+  // Buscar listas do Firestore
   useEffect(() => {
     const listsRef = collection(db, "lists");
     const q = query(listsRef, where("uid", "==", auth.currentUser?.uid));
@@ -83,9 +90,11 @@ const Dashboard = () => {
     return () => unsub();
   }, []);
 
+  // Filtrar listas abertas e fechadas
   const openLists = lists.filter((l) => l.status === "open");
   const closedLists = lists.filter((l) => l.status === "finalizada");
 
+  // Funções de parse e format
   const parseTimestampString = (str) => {
     const match = str.match(/seconds=(\d+),\s*nanoseconds=(\d+)/);
     if (!match) return null;
@@ -103,17 +112,26 @@ const Dashboard = () => {
       month: "long",
       day: "numeric",
     });
-    return dateFormatter.format(date);
+    const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+    const dateStr = dateFormatter.format(date);
+    const timeStr = timeFormatter.format(date);
+    return dateStr; // Só a data, como você ajustou
   };
 
+  const formatXAxisLabel = (ms: number) => {
+    const date = new Date(ms);
+    // Formato curto para caber no eixo (ex: 12/Jan)
+    return date.toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
+  };
+
+  // useMemo pro chartData (com logs)
   const chartData = useMemo(() => {
-    console.log(
-      "ClosedLists raw:",
-      closedLists.map((l) => ({
-        name: l.name,
-        closed: l.closed?.substring(0, 50) + "...",
-      }))
-    );
     const filteredAndSorted = closedLists
       .filter((l) => l.name && l.name.trim() !== "")
       .sort((a, b) => {
@@ -121,32 +139,29 @@ const Dashboard = () => {
         const dateB = parseTimestampString(b.closed);
         return (dateA?.getTime() || 0) - (dateB?.getTime() || 0);
       });
-    console.log(
-      "Filtered & Sorted:",
-      filteredAndSorted.map((l) => ({
-        name: l.name,
-        parsedDate: parseTimestampString(l.closed),
-      }))
-    );
+
     const processedData = filteredAndSorted
       .map((l) => {
         const date = parseTimestampString(l.closed);
+        const timestamp = date ? date.getTime() : null;
         const label = date ? formatDateToString(date) : "Data inválida";
-        console.log(`Para ${l.name}: date=${date}, label="${label}"`);
         return {
+          timestamp,
           label,
           total: Number(l.total) || 0,
         };
       })
-      .filter(
-        (item) =>
-          item.label &&
-          item.label !== "Data inválida" &&
-          item.total !== undefined
-      );
-    console.log("Final chartData:", processedData);
+      .filter((item) => item.timestamp !== null && item.total !== undefined);
     return processedData;
   }, [closedLists]);
+
+  if (!font) return <Text>Carregando fonte...</Text>;
+
+  const validPoints = chartData.map((item, i) => ({
+    x: i * 50, // espaçamento horizontal fixo ou calculado
+    y: item.total,
+    label: item.label,
+  }));
 
   return (
     <>
@@ -161,30 +176,15 @@ const Dashboard = () => {
               {chartData.length > 0 ? (
                 <CartesianChart
                   data={chartData}
-                  xKey="label"
+                  xKey="timestamp"
                   yKeys={["total"]}
-                  domainPadding={{ left: 60, right: 60, top: 30, bottom: 50 }}
-                  // ← SYSTEM FONT: Omite font – usa default do sistema (Roboto/SF Pro)
-                  xAxis={{
-                    // font: null, // ← Opcional: força null pra system
-                    labelColor,
-                    labelRotate: -45, // Diagonal só no X
-                    formatXLabel: (label) => label || "",
-                    tickCount: chartData.length || 1,
-                    lineColor: "hsla(0, 0%, 0%, 0.25)",
-                    lineWidth: 1,
+                  domainPadding={{ left: 60, right: 60, top: 30, bottom: 80 }}
+                  axisOptions={{
+                    font,
+                    labelColor: "#ac24db",
+                    formatXLabel: formatXAxisLabel,
+                    x: { labelCount: 5 },
                   }}
-                  yAxis={[
-                    {
-                      // font: null, // ← Opcional: força null pra system
-                      labelColor,
-                      formatYLabel: (value) =>
-                        `R$ ${parseFloat(value).toFixed(0)}`,
-                      tickCount: 5,
-                      lineColor: "hsla(0, 0%, 0%, 0.25)",
-                      lineWidth: 1,
-                    },
-                  ]}
                 >
                   {({ points, chartBounds }) => (
                     <>
@@ -219,7 +219,6 @@ const Dashboard = () => {
                             animate={{
                               type: "timing",
                               duration: 800,
-                              delay: i * 100,
                             }}
                           />
                         </React.Fragment>
