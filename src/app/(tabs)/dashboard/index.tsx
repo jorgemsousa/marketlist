@@ -114,29 +114,20 @@ const Dashboard = () => {
 
   const formatDateToString = (date) => {
     if (!date) return "";
-    const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-      timeZone: "America/Sao_Paulo",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
-      timeZone: "America/Sao_Paulo",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    });
-    const dateStr = dateFormatter.format(date);
-    const timeStr = timeFormatter.format(date);
-    return dateStr; // Só a data, como você ajustou
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear()).slice(-2);
+    return `${day}/${month}/${year}`; // Ou só data sem hora, como você tinha
   };
 
   const formatXAxisLabel = (index) => {
     const item = chartData[index];
     if (!item) return "";
     const date = new Date(item.timestamp);
-    return date.toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
+    const day = String(date.getDate()).padStart(2, "0"); // Dia com zero à esquerda
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Mês (0-based +1)
+    const year = String(date.getFullYear()).slice(-2); // Ano completo
+    return `${day}/${month}/${year}`; // Formato DD/MM/YYYY
   };
 
   // useMemo pro chartData (com logs)
@@ -148,7 +139,7 @@ const Dashboard = () => {
         const dateB = parseTimestampString(b.closed);
         const timeA = dateA?.getTime() || 0;
         const timeB = dateB?.getTime() || 0;
-        return timeB - timeA; // Inverte pra mais recente primeiro (ajusta se quiser asc)
+        return timeA - timeB; // Inverte pra mais recente primeiro (ajusta se quiser asc)
       });
 
     const processedData = filteredAndSorted
