@@ -30,6 +30,7 @@ interface Product {
   name: string;
   quantity: number;
   price: number;
+  stock?: number | null;
   imageUrl?: string;
   type: string;
 }
@@ -46,6 +47,8 @@ export default function ListScreen() {
   >([]);
   const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
   const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
+  const [stockInputs, setStockInputs] = useState<Record<string, string>>({});
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
   const signOut = () => {
     auth.signOut();
@@ -63,11 +66,11 @@ export default function ListScreen() {
     });
     const itemsRef = collection(db, "lists", id as string, "items");
     const unsubItems = onSnapshot(itemsRef, (snapshot) => {
-      const items = snapshot.docs.map((d) => ({
+      let items = snapshot.docs.map((d) => ({
         id: d.id,
         ...(d.data() as any),
       })) as Product[];
-      const sortedItems = items.sort((a, b) => {
+      items = [...items].sort((a, b) => {
         if (a.done && !b.done) return 1;
         if (!a.done && b.done) return -1;
         return 0;
@@ -75,12 +78,15 @@ export default function ListScreen() {
       setProducts(items);
       const newPriceMap: Record<string, string> = {};
       const newQtyMap: Record<string, string> = {};
+      const newStockMap: Record<string, string> = {};
       items.forEach((it) => {
         newPriceMap[it.id] = (it.price ?? 0).toString();
         newQtyMap[it.id] = (it.quantity ?? 1).toString();
+        newStockMap[it.id] = it.stock != null ? it.stock.toString() : "";
       });
       setPriceInputs(newPriceMap);
       setQtyInputs(newQtyMap);
+      setStockInputs(newStockMap);
     });
     return () => {
       unsubList();
@@ -125,33 +131,49 @@ export default function ListScreen() {
     if (!id) return;
     const rawQty = qtyInputs[productId] ?? "0";
     const rawPrice = priceInputs[productId] ?? "0";
+    const rawStock = stockInputs[productId] ?? "0";
     const qty = parseInt(normalizeNumberString(rawQty)) || 0;
     const price = parseFloat(normalizeNumberString(rawPrice)) || 0;
+    const stock = rawStock
+      ? parseInt(normalizeNumberString(rawStock)) || null
+      : null;
     try {
       const productRef = doc(db, "lists", id as string, "items", productId);
-      await updateDoc(productRef, { quantity: qty, price: price, done: true });
+      await updateDoc(productRef, {
+        quantity: qty,
+        price: price,
+        stock: stock,
+        done: true,
+      });
     } catch (err) {
       console.error("Erro ao salvar produto:", err);
     }
   };
 
-  const handleSelectProduct = async (product: {
-    id: string;
-    name: string;
-    imageUrl?: string;
-  }) => {
-    if (!id) return;
+  const handleAddProducts = async (productIds: string[]) => {
+    if (!id || productIds.length === 0) return;
     try {
       const itemsRef = collection(db, "lists", id as string, "items");
-      await addDoc(itemsRef, {
-        name: product.name,
-        quantity: 1,
-        price: 0,
-        imageUrl: product.imageUrl || null,
-      });
-      setModalVisible(false);
+      const selectedItems = availableProducts.filter((p) =>
+        productIds.includes(p.id)
+      );
+      for (const product of selectedItems) {
+        await addDoc(itemsRef, {
+          name: product.name,
+          quantity: 1,
+          price: 0,
+          stock: null,
+          imageUrl: product.imageUrl || null,
+        });
+      }
+      setSelectedProducts([]);
+      Alert.alert(
+        "Sucesso",
+        `${selectedItems.length} produto(s) adicionado(s)!`
+      );
     } catch (err) {
-      console.error("Erro ao adicionar produto:", err);
+      console.error("Erro ao adicionar produtos:", err);
+      Alert.alert("Erro", "Não foi possível adicionar os produtos.");
     }
   };
 
@@ -201,6 +223,44 @@ export default function ListScreen() {
     }
   };
 
+  const openModal = () => {
+    setSelectedProducts([]);
+    setModalVisible(true);
+  };
+
+  const renderItem = ({
+    item,
+  }: {
+    item: { id: string; name: string; imageUrl?: string };
+  }) => {
+    const isSelected = selectedProducts.includes(item.id);
+    return (
+      <TouchableOpacity
+        className={`flex-row items-center p-3 border-b border-gray-200 ${
+          isSelected ? "bg-blue-50" : ""
+        }`}
+        onPress={() => {
+          if (isSelected) {
+            setSelectedProducts((prev) => prev.filter((id) => id !== item.id));
+          } else {
+            setSelectedProducts((prev) => [...prev, item.id]);
+          }
+        }}
+      >
+        {item.imageUrl && (
+          <Image
+            source={{ uri: item.imageUrl }}
+            className="w-10 h-10 rounded-md mr-3"
+          />
+        )}
+        <View className="flex-1">
+          <Text className="text-purple-700">{item.name}</Text>
+        </View>
+        {isSelected && <Text className="text-green-500 font-bold">✓</Text>}
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <>
       <Header title={listName} signOut={signOut} />
@@ -220,21 +280,35 @@ export default function ListScreen() {
               Total: R$ {total.toFixed(2)}
             </Text>
           </View>
+          <View className="flex-row justify-between p-2 mb-2 bg-gray-200 rounded-lg">
+            <Text className="text-purple-700 font-bold w-1/3 text-sm">
+              Produto
+            </Text>
+            <View className="flex-row justify-between w-2/3 px-2">
+              <Text className="text-purple-700 font-bold text-sm w-12 text-center">
+                Est.
+              </Text>
+              <Text className="text-purple-700 font-bold text-sm w-12 text-center">
+                Qtd
+              </Text>
+              <Text className="text-purple-700 font-bold text-sm w-20 text-center">
+                Valor
+              </Text>
+              <View className="w-24" />
+            </View>
+          </View>
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
             {products.map((p) => {
-              // ← NOVA LÓGICA: Fundo verde só se quantity > 0 E price > 0
               const isComplete = p.quantity > 0 && p.price > 0;
               const backgroundClass = isComplete
                 ? "bg-green-300"
                 : "bg-zinc-100";
-
               return (
                 <View
                   key={p.id}
-                  className={`flex-row justify-between p-2 rounded-xl mb-3 ${backgroundClass}`} // ← Fundo condicional
+                  className={`flex-row justify-between p-2 rounded-xl mb-3 ${backgroundClass}`}
                 >
-                  <View className="flex-row items-center w-1/4">
-                    {/* ← Texto roxo fixo (sem lógica de done) */}
+                  <View className="flex-row items-center w-1/3">
                     <Text
                       className="text-purple-700 text-sm"
                       numberOfLines={1}
@@ -243,9 +317,21 @@ export default function ListScreen() {
                       {p.name}
                     </Text>
                   </View>
-                  <View className="flex-row items-center mt-2">
+                  <View className="flex-row items-center mt-2 w-2/3 px-2 gap-1">
                     <TextInput
-                      className="py-1 text-center w-12 mr-2 rounded-md bg-zinc-200"
+                      className="py-1 text-center w-10 rounded-md bg-zinc-200"
+                      keyboardType="numeric"
+                      value={stockInputs[p.id] || ""}
+                      onChangeText={(text) =>
+                        setStockInputs((prev) => ({
+                          ...prev,
+                          [p.id]: text.replace(/[^0-9]/g, ""),
+                        }))
+                      }
+                      placeholder="0"
+                    />
+                    <TextInput
+                      className="p-1 text-center w-10 rounded-md bg-zinc-200"
                       keyboardType="numeric"
                       value={qtyInputs[p.id]}
                       onChangeText={(text) =>
@@ -256,7 +342,7 @@ export default function ListScreen() {
                       }
                     />
                     <TextInput
-                      className="py-1 text-center w-20 mr-2 rounded-md bg-zinc-200"
+                      className="p-1 text-center w-16 mr-2 rounded-md bg-zinc-200"
                       keyboardType={
                         Platform.OS === "ios" ? "decimal-pad" : "numeric"
                       }
@@ -269,16 +355,16 @@ export default function ListScreen() {
                       }
                     />
                     <TouchableOpacity
-                      className="bg-purple-700 px-3 py-1 rounded-md"
+                      className="bg-gray-100 px-3 py-1 rounded-md"
                       onPress={() => handleSaveProduct(p.id)}
                     >
-                      <Text className="text-white text-sm">Salvar</Text>
+                      <Text className="text-white text-lg">✅</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      className="bg-red-600 px-3 py-1 rounded-md mx-1"
+                      className="bg-gray-100 px-3 py-1 rounded-md mx-1"
                       onPress={() => handleRemoveProduct(p.id)}
                     >
-                      <Text className="text-white text-sm font-bold">X</Text>
+                      <Text className="text-white text-sm font-bold">🗑️</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -287,7 +373,7 @@ export default function ListScreen() {
           </ScrollView>
           <TouchableOpacity
             className="bg-purple-700 rounded-full items-center mt-4 p-3"
-            onPress={() => setModalVisible(true)}
+            onPress={openModal}
           >
             <Text className="text-white font-bold text-xl">
               Adicionar Produto
@@ -297,7 +383,7 @@ export default function ListScreen() {
             <View className="flex-1 justify-center items-center bg-black/50">
               <View className="bg-white p-4 rounded-2xl w-11/12 max-h-[90%]">
                 <Text className="text-lg font-bold mb-4 text-purple-700">
-                  Selecione um Produto
+                  Selecione um ou mais Produtos
                 </Text>
                 <SectionList
                   sections={Object.values(
@@ -309,20 +395,7 @@ export default function ListScreen() {
                     }, {} as Record<string, { title: string; data: typeof availableProducts }>)
                   )}
                   keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      className="flex-row items-center p-3 border-b border-gray-200"
-                      onPress={() => handleSelectProduct(item)}
-                    >
-                      {item.imageUrl && (
-                        <Image
-                          source={{ uri: item.imageUrl }}
-                          className="w-10 h-10 rounded-md mr-3"
-                        />
-                      )}
-                      <Text className="text-purple-700">{item.name}</Text>
-                    </TouchableOpacity>
-                  )}
+                  renderItem={renderItem}
                   renderSectionHeader={({ section: { title } }) => (
                     <Text className="text-base font-bold bg-gray-100 px-2 py-1 text-purple-700">
                       {title}
@@ -330,14 +403,36 @@ export default function ListScreen() {
                   )}
                   style={{ maxHeight: 320 }}
                 />
-                <TouchableOpacity
-                  className="border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full"
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text className="text-purple-700 font-bold text-center">
-                    Fechar
-                  </Text>
-                </TouchableOpacity>
+                <View className="flex-row justify-between mt-4">
+                  <TouchableOpacity
+                    className={`flex-1 items-center justify-center px-4 py-2 rounded-md mr-2 ${
+                      selectedProducts.length > 0
+                        ? "bg-purple-700 border border-purple-700"
+                        : "bg-gray-200 border border-gray-300"
+                    }`}
+                    onPress={() => handleAddProducts(selectedProducts)}
+                    disabled={selectedProducts.length === 0}
+                  >
+                    <Text
+                      className={`font-bold ${
+                        selectedProducts.length > 0
+                          ? "text-white"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      Adicionar{" "}
+                      {selectedProducts.length > 0
+                        ? `(${selectedProducts.length})`
+                        : ""}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-1 border border-gray-300 items-center justify-center px-4 py-2 rounded-md ml-2 bg-gray-100"
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <Text className="text-gray-600 font-bold">Fechar</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </Modal>

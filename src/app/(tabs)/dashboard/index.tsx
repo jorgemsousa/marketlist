@@ -95,7 +95,7 @@ const Dashboard = () => {
   const closedLists = lists.filter((l) => l.status === "finalizada");
 
   // Funções de parse e format
-  const parseTimestampString = (str) => {
+  const parseTimestampString = (str: string) => {
     if (!str) return null;
     // Regex mais flexível pro Firestore Timestamp
     const match = str.match(
@@ -112,7 +112,7 @@ const Dashboard = () => {
     return isNaN(fallbackDate.getTime()) ? null : fallbackDate;
   };
 
-  const formatDateToString = (date) => {
+  const formatDateToString = (date: Date) => {
     if (!date) return "";
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -120,10 +120,10 @@ const Dashboard = () => {
     return `${day}/${month}/${year}`; // Ou só data sem hora, como você tinha
   };
 
-  const formatXAxisLabel = (index) => {
+  const formatXAxisLabel = (index: number) => {
     const item = chartData[index];
     if (!item) return "";
-    const date = new Date(item.timestamp);
+    const date = new Date(item.timestamp || 0);
     const day = String(date.getDate()).padStart(2, "0"); // Dia com zero à esquerda
     const month = String(date.getMonth() + 1).padStart(2, "0"); // Mês (0-based +1)
     const year = String(date.getFullYear()).slice(-2); // Ano completo
