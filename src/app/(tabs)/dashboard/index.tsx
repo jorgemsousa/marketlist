@@ -117,7 +117,7 @@ const Dashboard = () => {
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = String(date.getFullYear()).slice(-2);
-    return `${day}/${month}/${year}`; // Ou só data sem hora, como você tinha
+    return `${day}/${month}`; // Ou só data sem hora, como você tinha
   };
 
   const formatXAxisLabel = (index: number) => {
@@ -127,7 +127,7 @@ const Dashboard = () => {
     const day = String(date.getDate()).padStart(2, "0"); // Dia com zero à esquerda
     const month = String(date.getMonth() + 1).padStart(2, "0"); // Mês (0-based +1)
     const year = String(date.getFullYear()).slice(-2); // Ano completo
-    return `${day}/${month}/${year}`; // Formato DD/MM/YYYY
+    return `${day}/${month}`; // Formato DD/MM/YYYY
   };
 
   // useMemo pro chartData (com logs)
@@ -182,11 +182,11 @@ const Dashboard = () => {
                   data={chartData}
                   xKey="x" // Muda pra "x" index!
                   yKeys={["total"]}
-                  domainPadding={{ left: 60, right: 60, top: 30, bottom: 120 }} // + bottom pra labels
+                  domainPadding={{ left: 60, right: 60, top: 30, bottom: 120 }}
                   axisOptions={{
                     font: font || undefined,
                     labelColor: "#ac24db",
-                    formatXLabel: (index) => chartData[index]?.label || "", // Pega label pelo index
+                    formatXLabel: (index) => chartData[index]?.label || "",
                     x: { labelCount: Math.min(5, chartData.length) },
                   }}
                 >

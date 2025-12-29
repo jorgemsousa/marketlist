@@ -49,6 +49,7 @@ export default function ListScreen() {
   const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
   const [stockInputs, setStockInputs] = useState<Record<string, string>>({});
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const signOut = () => {
     auth.signOut();
@@ -317,7 +318,7 @@ export default function ListScreen() {
                       {p.name}
                     </Text>
                   </View>
-                  <View className="flex-row items-center mt-2 w-2/3 px-2 gap-1">
+                  <View className="flex-row items-center mt-2 w-2/3 gap-1 mr-2">
                     <TextInput
                       className="py-1 text-center w-10 rounded-md bg-zinc-200"
                       keyboardType="numeric"
@@ -355,16 +356,16 @@ export default function ListScreen() {
                       }
                     />
                     <TouchableOpacity
-                      className="bg-gray-100 px-3 py-1 rounded-md"
+                      className="px-3 py-1 rounded-md"
                       onPress={() => handleSaveProduct(p.id)}
                     >
-                      <Text className="text-white text-lg">✅</Text>
+                      <Text className="text-lg">✅</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      className="bg-gray-100 px-3 py-1 rounded-md mx-1"
+                      className="px-3 py-1 rounded-md"
                       onPress={() => handleRemoveProduct(p.id)}
                     >
-                      <Text className="text-white text-sm font-bold">🗑️</Text>
+                      <Text className="text-sm font-bold">🗑️</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -385,14 +386,36 @@ export default function ListScreen() {
                 <Text className="text-lg font-bold mb-4 text-purple-700">
                   Selecione um ou mais Produtos
                 </Text>
+
+                {/* ← NOVA PARTE: Input de busca */}
+                <View className="mb-4">
+                  <TextInput
+                    className={`border-2 ${
+                      searchQuery ? "border-purple-700" : "border-gray-300"
+                    } rounded-full py-2 px-6 mb-4 bg-gray-100`}
+                    placeholder="Buscar produto por nome..."
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+
+                {/* ← SectionList com filtro dinâmico */}
                 <SectionList
                   sections={Object.values(
-                    availableProducts.reduce((acc, item) => {
-                      const type = item.type || "Outros";
-                      if (!acc[type]) acc[type] = { title: type, data: [] };
-                      acc[type].data.push(item);
-                      return acc;
-                    }, {} as Record<string, { title: string; data: typeof availableProducts }>)
+                    availableProducts
+                      .filter((item) =>
+                        item.name
+                          ?.toLowerCase()
+                          .includes(searchQuery.toLowerCase())
+                      ) // ← Filtra por nome (case-insensitive)
+                      .reduce((acc, item) => {
+                        const type = item.type || "Outros";
+                        if (!acc[type]) acc[type] = { title: type, data: [] };
+                        acc[type].data.push(item);
+                        return acc;
+                      }, {} as Record<string, { title: string; data: typeof availableProducts }>)
                   )}
                   keyExtractor={(item) => item.id}
                   renderItem={renderItem}
@@ -402,7 +425,15 @@ export default function ListScreen() {
                     </Text>
                   )}
                   style={{ maxHeight: 320 }}
+                  ListEmptyComponent={
+                    <Text className="text-center text-gray-500 py-4">
+                      {searchQuery
+                        ? `Nenhum produto encontrado para "${searchQuery}"`
+                        : "Nenhum produto disponível"}
+                    </Text>
+                  } // ← Opcional: Mensagem quando vazio
                 />
+
                 <View className="flex-row justify-between mt-4">
                   <TouchableOpacity
                     className={`flex-1 items-center justify-center px-4 py-2 rounded-md mr-2 ${
@@ -410,7 +441,10 @@ export default function ListScreen() {
                         ? "bg-purple-700 border border-purple-700"
                         : "bg-gray-200 border border-gray-300"
                     }`}
-                    onPress={() => handleAddProducts(selectedProducts)}
+                    onPress={() => {
+                      handleAddProducts(selectedProducts);
+                      setSearchQuery(""); // ← Limpa busca ao adicionar
+                    }}
                     disabled={selectedProducts.length === 0}
                   >
                     <Text
@@ -428,7 +462,10 @@ export default function ListScreen() {
                   </TouchableOpacity>
                   <TouchableOpacity
                     className="flex-1 border border-gray-300 items-center justify-center px-4 py-2 rounded-md ml-2 bg-gray-100"
-                    onPress={() => setModalVisible(false)}
+                    onPress={() => {
+                      setModalVisible(false);
+                      setSearchQuery(""); // ← Limpa busca ao fechar
+                    }}
                   >
                     <Text className="text-gray-600 font-bold">Fechar</Text>
                   </TouchableOpacity>
