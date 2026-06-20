@@ -4,7 +4,7 @@
     "strict": true,
     "paths": {
       "@/*": ["./*"],
-      "@fonts/*": ["assets/fonts/*"]
+      "@fonts/*": ["./assets/fonts/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]

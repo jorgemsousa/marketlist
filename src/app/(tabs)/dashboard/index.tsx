@@ -25,7 +25,6 @@ import { LinearGradient, useFont, vec } from "@shopify/react-native-skia";
 import Header from "@/src/components/header";
 import Login from "../../login";
 import * as Font from "expo-font";
-import { RotateInDownLeft } from "react-native-reanimated";
 
 const Dashboard = () => {
   const auth = getAuth();

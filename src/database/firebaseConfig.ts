@@ -2,14 +2,22 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import {
+  FIREBASE_API_KEY,
+  FIREBASE_AUTH_DOMAIN,
+  FIREBASE_PROJECT_ID,
+  FIREBASE_STORAGE_BUCKET,
+  FIREBASE_MESSAGING_SENDER_ID,
+  FIREBASE_APP_ID,
+} from "@env";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDfhYOKC1jAZ8NzQDuMd2Dz6gj8_EjAr_s",
-  authDomain: "marketlist-26e37.firebaseapp.com",
-  projectId: "marketlist-26e37",
-  storageBucket: "marketlist-26e37.appspot.com", 
-  messagingSenderId: "41443072478",
-  appId: "1:41443072478:web:8e2e7bb60828e0eaaee54f"
+  apiKey: FIREBASE_API_KEY,
+  authDomain: FIREBASE_AUTH_DOMAIN,
+  projectId: FIREBASE_PROJECT_ID,
+  storageBucket: FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
+  appId: FIREBASE_APP_ID,
 };
 
 // Evita múltiplas inicializações
