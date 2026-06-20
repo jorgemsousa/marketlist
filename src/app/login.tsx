@@ -10,21 +10,28 @@ import {
 import Container from "../components/container";
 import LoginModal from "@/src/components/loginModal";
 import RegisterModal from "@/src/components/registerModal";
-import { useAutoLogin } from "@/src/components/auth"; // ← Ajusta o path pro seu Auth (ex: onde tá o export do hook)
+import { useAutoLogin } from "@/src/components/auth";
+import { useTheme } from "@/src/contexts/ThemeContext";
 
 const Login = () => {
   const { width, height } = useWindowDimensions();
+  const { colors, isDark } = useTheme();
   const [open, setOpen] = React.useState(false);
   const [openReg, setOpenReg] = React.useState(false);
-  const { isChecking } = useAutoLogin(); // ← Hook pra auto-login
+  const { isChecking } = useAutoLogin();
 
-  // ← Loader enquanto checa auto-login
   if (isChecking) {
     return (
       <Container>
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#purple-700" />
-          <Text className="mt-4 text-purple-700 font-semibold">
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text
+            style={{
+              marginTop: 16,
+              color: colors.primary,
+              fontWeight: "600",
+            }}
+          >
             Verificando login...
           </Text>
         </View>
@@ -35,10 +42,27 @@ const Login = () => {
   return (
     <Container>
       <View className="flex-2 justify-center items-center mt-20">
-        <Text className="text-center font-bold text-4xl text-purple-700 mt-8">
+        <Text
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: 36,
+            color: colors.primary,
+            marginTop: 32,
+          }}
+        >
           Bem-vindo de volta!
         </Text>
-        <Text className="text-center font-semibold text-md text-zinc-400 px-8 mt-4">
+        <Text
+          style={{
+            textAlign: "center",
+            fontWeight: "600",
+            fontSize: 16,
+            color: isDark ? colors.textSecondary : "#9ca3af",
+            paddingHorizontal: 32,
+            marginTop: 16,
+          }}
+        >
           Estamos felizes em ter você conosco! Organize suas compras de maneira
           rápida e prática. Com o nosso app, você pode criar listas
           personalizadas, adicionar produtos com facilidade, e nunca mais
@@ -53,20 +77,42 @@ const Login = () => {
             resizeMode: "contain",
             marginVertical: 20,
           }}
-          className="flex-2"
         />
         <View className="w-full px-5">
           <TouchableOpacity
             onPress={() => setOpen(true)}
-            className="bg-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full my-2"
+            style={{
+              backgroundColor: colors.primary,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: 16,
+              borderRadius: 999,
+              marginVertical: 8,
+            }}
           >
-            <Text className="text-white font-bold text-lg">Login</Text>
+            <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 18 }}>
+              Login
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setOpenReg(true)}
-            className="border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full my-2"
+            style={{
+              borderWidth: 1,
+              borderColor: colors.primary,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: 16,
+              borderRadius: 999,
+              marginVertical: 8,
+            }}
           >
-            <Text className="text-purple-700 font-semibold text-lg">
+            <Text
+              style={{
+                color: colors.primary,
+                fontWeight: "600",
+                fontSize: 18,
+              }}
+            >
               Cadastrar
             </Text>
           </TouchableOpacity>

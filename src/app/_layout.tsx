@@ -1,5 +1,8 @@
+import { View } from "react-native";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
+import { ThemeProvider } from "../contexts/ThemeContext";
+import OfflineBanner from "../components/OfflineBanner";
 import "../../global.css";
 
 export default function RootLayout() {
@@ -8,14 +11,19 @@ export default function RootLayout() {
   });
 
   if (!fontsLoaded) {
-    return null; // ou um componente de loading
+    return null;
   }
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="list/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <ThemeProvider>
+      <View className="flex-1 bg-white">
+        <OfflineBanner />
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="list/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+      </View>
+    </ThemeProvider>
   );
 }

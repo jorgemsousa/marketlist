@@ -1,7 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, Animated, Easing, Modal, Image, useWindowDimensions } from 'react-native';
-import { router } from 'expo-router';
-import Auth from '../auth';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  Animated,
+  Easing,
+  Modal,
+  Image,
+  useWindowDimensions,
+} from "react-native";
+import { router } from "expo-router";
+import Auth from "../auth";
+import { useTheme } from "@/src/contexts/ThemeContext";
 
 type Props = {
   open: boolean;
@@ -9,11 +18,11 @@ type Props = {
 };
 
 const LoginModal = ({ open, onClose }: Props) => {
-  const [modalVisible, setModalVisible] = useState(open);  
-  const { width, height} = useWindowDimensions()
+  const { colors, isDark } = useTheme();
+  const [modalVisible, setModalVisible] = useState(open);
+  const { width, height } = useWindowDimensions();
   const slideAnim = useRef(new Animated.Value(300)).current;
 
- 
   useEffect(() => {
     if (open) {
       slideIn();
@@ -25,7 +34,7 @@ const LoginModal = ({ open, onClose }: Props) => {
   const slideIn = () => {
     setModalVisible(true);
     Animated.timing(slideAnim, {
-      toValue: 0, 
+      toValue: 0,
       duration: 500,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
@@ -34,7 +43,7 @@ const LoginModal = ({ open, onClose }: Props) => {
 
   const slideOut = () => {
     Animated.timing(slideAnim, {
-      toValue: 600, 
+      toValue: 600,
       duration: 500,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
@@ -45,21 +54,41 @@ const LoginModal = ({ open, onClose }: Props) => {
   };
 
   return (
-    <View className='flex-2 justify-center items-center'>
+    <View className="flex-2 justify-center items-center">
       {modalVisible && (
         <Modal transparent={true} visible={modalVisible} animationType="none">
-          <View className='flex-1 justify-end'>
+          <View className="flex-1 justify-end">
             <Animated.View
               style={{
                 transform: [{ translateY: slideAnim }],
+                backgroundColor: colors.white,
+                borderWidth: 1,
+                borderColor: colors.border,
+                padding: 24,
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
               }}
-              className='bg-zinc-50 border border-zinc-300 p-6 rounded-t-3xl'
             >
-              <Text className='text-purple-700 text-center font-bold text-3xl mb-4'>Login</Text>
-              
-              <Image 
-                source={require('../../assets/images/login.png')}
-                style={{ width, height: height * 0.3, resizeMode: 'contain', marginVertical: 20 }}
+              <Text
+                style={{
+                  color: colors.primary,
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: 30,
+                  marginBottom: 16,
+                }}
+              >
+                Login
+              </Text>
+
+              <Image
+                source={require("../../assets/images/login.png")}
+                style={{
+                  width,
+                  height: height * 0.3,
+                  resizeMode: "contain",
+                  marginVertical: 20,
+                }}
               />
 
               <Auth onClose={onClose} />

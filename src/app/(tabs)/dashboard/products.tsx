@@ -19,6 +19,7 @@ import { collection, addDoc, getDocs } from "firebase/firestore";
 import { auth, db } from "@/src/database/firebaseConfig";
 import { router } from "expo-router";
 import SelectSetor from "@/src/components/picker";
+import { useTheme } from "@/src/contexts/ThemeContext";
 
 interface Product {
   id: string;
@@ -42,6 +43,7 @@ const setores = [
 ];
 
 const Products: React.FC = () => {
+  const { colors, isDark } = useTheme();
   const [products, setProducts] = useState<Product[]>([]);
   const [newProductName, setNewProductName] = useState("");
   const [newProductImageUrl, setNewProductImageUrl] = useState("");
@@ -115,8 +117,17 @@ const Products: React.FC = () => {
     if (sectionProducts.length === 0) return null;
 
     return (
-      <View key={type} className="mb-6 p-4">
-        <Text className="text-2xl font-bold mb-2 text-zinc-600">{type}</Text>
+      <View key={type} style={{ marginBottom: 24, padding: 16 }}>
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: "bold",
+            marginBottom: 8,
+            color: isDark ? colors.textSecondary : "#52525b",
+          }}
+        >
+          {type}
+        </Text>
         <FlatList
           data={sectionProducts}
           horizontal
@@ -128,7 +139,13 @@ const Products: React.FC = () => {
                 source={!item.imageUrl ? fallbackImage : { uri: item.imageUrl }}
                 style={{ width: 100, height: 100, borderRadius: 8 }}
               />
-              <Text className="text-center mt-2 text-zinc-500">
+              <Text
+                style={{
+                  textAlign: "center",
+                  marginTop: 8,
+                  color: isDark ? colors.textSecondary : "#71717a",
+                }}
+              >
                 {item.name}
               </Text>
             </View>
@@ -141,14 +158,34 @@ const Products: React.FC = () => {
   return (
     <>
       <Header title="Produtos" signOut={signOut} />
-      <SafeAreaView className="flex-1 p-4 bg-white">
-        <View className="p-4 flex-row items-center justify-between mb-4">
-          <Text className="text-xl font-bold text-purple-700">
+      <SafeAreaView
+        style={{ flex: 1, padding: 16, backgroundColor: colors.background }}
+      >
+        <View
+          style={{
+            padding: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 16,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: "bold",
+              color: colors.primary,
+            }}
+          >
             Produtos por categoria
           </Text>
           <TouchableOpacity
             onPress={() => setIsAdding(true)}
-            className="bg-purple-700 p-2 rounded-lg"
+            style={{
+              backgroundColor: colors.primary,
+              padding: 8,
+              borderRadius: 8,
+            }}
           >
             <Ionicons name="add" size={24} color="#fff" />
           </TouchableOpacity>
@@ -167,29 +204,55 @@ const Products: React.FC = () => {
           visible={isAdding}
           onRequestClose={() => setIsAdding(false)}
         >
-          <View className="flex-1 justify-center items-center bg-black/50 p-4">
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: colors.overlay,
+              padding: 16,
+            }}
+          >
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
-              className="w-full"
+              style={{ width: "100%" }}
             >
               <ScrollView
                 contentContainerStyle={{
-                  backgroundColor: "white",
+                  backgroundColor: colors.white,
                   borderRadius: 24,
                   padding: 20,
                 }}
               >
                 <TextInput
                   placeholder="Nome do produto"
+                  placeholderTextColor={colors.textSecondary}
                   value={newProductName}
                   onChangeText={setNewProductName}
-                  className="border-2 border-purple-700 rounded-full p-4 mb-4 bg-gray-100"
+                  style={{
+                    borderWidth: 2,
+                    borderColor: colors.primary,
+                    borderRadius: 999,
+                    padding: 16,
+                    marginBottom: 16,
+                    backgroundColor: colors.card,
+                    color: colors.text,
+                  }}
                 />
                 <TextInput
                   placeholder="URL da imagem"
+                  placeholderTextColor={colors.textSecondary}
                   value={newProductImageUrl}
                   onChangeText={setNewProductImageUrl}
-                  className="border-2 border-purple-700 rounded-full p-4 mb-4 bg-gray-100"
+                  style={{
+                    borderWidth: 2,
+                    borderColor: colors.primary,
+                    borderRadius: 999,
+                    padding: 16,
+                    marginBottom: 16,
+                    backgroundColor: colors.card,
+                    color: colors.text,
+                  }}
                 />
                 <SelectSetor
                   value={newProductType}
@@ -198,17 +261,37 @@ const Products: React.FC = () => {
 
                 <TouchableOpacity
                   onPress={addProduct}
-                  className="bg-purple-700 p-3 rounded-full items-center mb-2 mt-4"
+                  style={{
+                    backgroundColor: colors.primary,
+                    padding: 12,
+                    borderRadius: 999,
+                    alignItems: "center",
+                    marginBottom: 8,
+                    marginTop: 16,
+                  }}
                 >
-                  <Text className="text-white text-xl font-bold">
+                  <Text style={{ color: "#fff", fontSize: 20, fontWeight: "bold" }}>
                     Adicionar Produto
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setIsAdding(false)}
-                  className="border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full"
+                  style={{
+                    borderWidth: 1,
+                    borderColor: colors.primary,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingVertical: 16,
+                    borderRadius: 999,
+                  }}
                 >
-                  <Text className="border-purple-700 text-xl text-purple-700 font-bold">
+                  <Text
+                    style={{
+                      color: colors.primary,
+                      fontSize: 20,
+                      fontWeight: "bold",
+                    }}
+                  >
                     Cancelar
                   </Text>
                 </TouchableOpacity>

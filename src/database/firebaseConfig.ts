@@ -1,7 +1,7 @@
 // firebaseConfig.ts
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeAuth } from "firebase/auth";
+import { initializeFirestore, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
 import {
   FIREBASE_API_KEY,
   FIREBASE_AUTH_DOMAIN,
@@ -20,11 +20,14 @@ const firebaseConfig = {
   appId: FIREBASE_APP_ID,
 };
 
-// Evita múltiplas inicializações
 const app = initializeApp(firebaseConfig);
 
-// Exporta Auth e Firestore
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Auth with React Native persistence
+const auth = initializeAuth(app);
+
+// Firestore with unlimited offline cache
+const db = initializeFirestore(app, {
+  cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+});
 
 export { auth, db };

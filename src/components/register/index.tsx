@@ -1,117 +1,154 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { doc, setDoc } from "firebase/firestore";
-import { auth, db } from '@/src/database/firebaseConfig';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from "@/src/database/firebaseConfig";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { useTheme } from "@/src/contexts/ThemeContext";
 
 type Props = {
   onClose: () => void;
 };
 
-type PropsAccount = {
-  name: string;
-  email: string;
-  password: string;
-  passwordRepeat: string;
-  image: string;
-};
-
 const Register = ({ onClose }: Props) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordRepeat, setPasswordRepeat] = useState('');
-  const [image, setImage] = useState('');
+  const { colors, isDark } = useTheme();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordRepeat, setPasswordRepeat] = useState("");
+  const [image, setImage] = useState("");
   const [nameFocused, setNameFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordRepeatFocused, setPasswordRepeatFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [imageFocused, setImageFocused] = useState(false);
 
- const handleCreateAccount = async () => {
-  if(password !== passwordRepeat){
-    alert('As senhas não coincidem!');
-    return;
-  }
+  const handleCreateAccount = async () => {
+    if (password !== passwordRepeat) {
+      alert("As senhas não coincidem!");
+      return;
+    }
 
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
 
-    await setDoc(doc(db, "users", user.uid), {
-      uid: user.uid,
-      email: user.email,
-      name: name,
-      image: image,
-      createdAt: new Date()
-    });
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email,
+        name: name,
+        image: image,
+        createdAt: new Date(),
+      });
 
-    Alert.alert("Sucesso", "Cadastro realizado!");
-    onClose();
-  } catch (error: any) {
-    console.error('Erro ao criar usuário:', error.code, error.message);
-    alert(error.message);
-  }
-}
+      Alert.alert("Sucesso", "Cadastro realizado!");
+      onClose();
+    } catch (error: any) {
+      console.error("Erro ao criar usuário:", error.code, error.message);
+      alert(error.message);
+    }
+  };
 
+  const inputStyle = (focused: boolean) => ({
+    borderWidth: 2,
+    borderColor: focused ? colors.primary : colors.border,
+    borderRadius: 999,
+    padding: 16,
+    marginBottom: 16,
+    backgroundColor: colors.card,
+    color: colors.text,
+  });
 
   return (
-    <View>                   
+    <View>
       <TextInput
         placeholder="Nome"
+        placeholderTextColor={colors.textSecondary}
         onChangeText={setName}
         value={name}
         onFocus={() => setNameFocused(true)}
         onBlur={() => setNameFocused(false)}
-        className={`border-2 ${nameFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
+        style={inputStyle(nameFocused)}
       />
-
       <TextInput
         placeholder="E-mail"
+        placeholderTextColor={colors.textSecondary}
         keyboardType="email-address"
         onChangeText={setEmail}
         onFocus={() => setEmailFocused(true)}
         onBlur={() => setEmailFocused(false)}
-        className={`border-2 ${emailFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
+        style={inputStyle(emailFocused)}
       />
       <TextInput
         placeholder="Senha"
+        placeholderTextColor={colors.textSecondary}
         secureTextEntry
         onChangeText={setPassword}
         onFocus={() => setPasswordFocused(true)}
         onBlur={() => setPasswordFocused(false)}
-        className={`border-2 ${passwordFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
-      />  
+        style={inputStyle(passwordFocused)}
+      />
       <TextInput
         placeholder="Repita a Senha"
+        placeholderTextColor={colors.textSecondary}
         secureTextEntry
         onChangeText={setPasswordRepeat}
         onFocus={() => setPasswordRepeatFocused(true)}
         onBlur={() => setPasswordRepeatFocused(false)}
-        className={`border-2 ${passwordRepeatFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-4 bg-gray-100`}
-      />  
-
+        style={inputStyle(passwordRepeatFocused)}
+      />
       <TextInput
-        placeholder="url da imagem"
+        placeholder="URL da imagem"
+        placeholderTextColor={colors.textSecondary}
         onChangeText={setImage}
         onFocus={() => setImageFocused(true)}
         onBlur={() => setImageFocused(false)}
-        className={`border-2 ${imageFocused ? 'border-purple-700': 'border-gray-300'} rounded-full p-4 mb-10 bg-gray-100`}            /> 
-
-      <TouchableOpacity 
-        onPress={() => {
-          handleCreateAccount()
+        style={{ ...inputStyle(imageFocused), marginBottom: 40 }}
+      />
+      <TouchableOpacity
+        onPress={handleCreateAccount}
+        style={{
+          backgroundColor: colors.primary,
+          padding: 16,
+          borderRadius: 999,
+          marginBottom: 16,
         }}
-        className='bg-purple-700 p-4 rounded-full mb-4'>
-        <Text className='text-white font-bold text-center text-lg'>Cadastrar</Text>
-      </TouchableOpacity>
-      <TouchableOpacity 
-        onPress={() => {
-          onClose();
-        }} 
-        className='border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full'
       >
-        <Text className='text-purple-700 font-bold text-center text-lg'>Cancelar</Text>
+        <Text
+          style={{
+            color: "#fff",
+            fontWeight: "bold",
+            textAlign: "center",
+            fontSize: 18,
+          }}
+        >
+          Cadastrar
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => onClose()}
+        style={{
+          borderWidth: 1,
+          borderColor: colors.primary,
+          alignItems: "center",
+          justifyContent: "center",
+          paddingVertical: 16,
+          borderRadius: 999,
+        }}
+      >
+        <Text
+          style={{
+            color: colors.primary,
+            fontWeight: "bold",
+            textAlign: "center",
+            fontSize: 18,
+          }}
+        >
+          Cancelar
+        </Text>
       </TouchableOpacity>
     </View>
   );

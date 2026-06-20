@@ -1,25 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Modal,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
   FlatList,
-} from 'react-native';
+} from "react-native";
+import { useTheme } from "@/src/contexts/ThemeContext";
 
 const setores = [
-  { label: 'Açougue', value: 'Açougue' },
-  { label: 'Frios e Laticínios', value: 'Frios e Laticínios' },
-  { label: 'Hortifrúti', value: 'Hortifrúti' },
-  { label: 'Padaria', value: 'Padaria' },
-  { label: 'Mercearia', value: 'Mercearia' },
-  { label: 'Adega e Bebidas', value: 'Adega e Bebidas' },
-  { label: 'Higiene Pessoal e Beleza', value: 'Higiene Pessoal e Beleza' },
-  { label: 'Limpeza Doméstica', value: 'Limpeza Doméstica' },
-  { label: 'Rotisseria', value: 'Rotisseria' },
-  { label: 'Pescados/Peixaria', value: 'Pescados/Peixaria' },
-  { label: 'Bazar', value: 'Bazar' },
+  { label: "Açougue", value: "Açougue" },
+  { label: "Frios e Laticínios", value: "Frios e Laticínios" },
+  { label: "Hortifrúti", value: "Hortifrúti" },
+  { label: "Padaria", value: "Padaria" },
+  { label: "Mercearia", value: "Mercearia" },
+  { label: "Adega e Bebidas", value: "Adega e Bebidas" },
+  { label: "Higiene Pessoal e Beleza", value: "Higiene Pessoal e Beleza" },
+  { label: "Limpeza Doméstica", value: "Limpeza Doméstica" },
+  { label: "Rotisseria", value: "Rotisseria" },
+  { label: "Pescados/Peixaria", value: "Pescados/Peixaria" },
+  { label: "Bazar", value: "Bazar" },
 ];
 
 type SelectSetorProps = {
@@ -28,6 +28,7 @@ type SelectSetorProps = {
 };
 
 export default function SelectSetor({ value, onChange }: SelectSetorProps) {
+  const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
 
   const handleSelect = (selectedValue: string) => {
@@ -38,11 +39,19 @@ export default function SelectSetor({ value, onChange }: SelectSetorProps) {
   return (
     <View>
       <TouchableOpacity
-        style={styles.input}
+        style={{
+          paddingVertical: 12,
+          paddingHorizontal: 16,
+          borderWidth: 2,
+          borderColor: colors.primary,
+          borderRadius: 25,
+          backgroundColor: colors.card,
+          marginBottom: 16,
+        }}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={styles.inputText}>
-          {value || 'Selecione o setor...'}
+        <Text style={{ color: value ? colors.text : colors.textSecondary, fontSize: 16 }}>
+          {value || "Selecione o setor..."}
         </Text>
       </TouchableOpacity>
 
@@ -52,25 +61,51 @@ export default function SelectSetor({ value, onChange }: SelectSetorProps) {
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: colors.overlay,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <View
+            style={{
+              width: "80%",
+              backgroundColor: colors.white,
+              borderRadius: 10,
+              padding: 16,
+            }}
+          >
             <FlatList
               data={setores}
               keyExtractor={(item) => item.value}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.option}
+                  style={{
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                  }}
                   onPress={() => handleSelect(item.value)}
                 >
-                  <Text style={styles.optionText}>{item.label}</Text>
+                  <Text style={{ fontSize: 16, color: colors.text }}>
+                    {item.label}
+                  </Text>
                 </TouchableOpacity>
               )}
             />
             <TouchableOpacity
-              style={styles.closeButton}
+              style={{
+                marginTop: 16,
+                padding: 12,
+                backgroundColor: colors.primary,
+                borderRadius: 8,
+                alignItems: "center",
+              }}
               onPress={() => setModalVisible(false)}
             >
-              <Text style={styles.closeButtonText}>Fechar</Text>
+              <Text style={{ color: "#fff", fontSize: 16 }}>Fechar</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -78,51 +113,3 @@ export default function SelectSetor({ value, onChange }: SelectSetorProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  input: {
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 2,
-    borderColor: '#7e22ce',
-    borderRadius: 25,
-    backgroundColor: '#F3F4F6',
-    marginBottom: 16,
-  },
-  inputText: {
-    color: '#3f3e3eff',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 16,
-  },
-  option: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#3f3e3eff',
-  },
-  closeButton: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: '#7e22ce',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-});

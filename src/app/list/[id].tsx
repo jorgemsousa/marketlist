@@ -24,19 +24,25 @@ import {
 } from "firebase/firestore";
 import Header from "@/src/components/header";
 import Container from "@/src/components/container";
+import { Ionicons } from "@expo/vector-icons";
+import { exportListAsHtml, shareFile } from "@/src/utils/exportList";
+import { useTheme } from "@/src/contexts/ThemeContext";
+import { incrementProductUsage, getMostUsedProductIds } from "@/src/hooks/useProductUsage";
 
 interface Product {
   id: string;
   name: string;
   quantity: number;
   price: number;
-  stock?: number | null;
-  imageUrl?: string;
+  stock: number | null;
+  imageUrl: string | null;
+  done?: boolean;
   type: string;
 }
 
 export default function ListScreen() {
   const { id } = useLocalSearchParams();
+  const { colors, isDark } = useTheme();
   const [listName, setListName] = useState("");
   const [status, setStatus] = useState("open");
   const [products, setProducts] = useState<Product[]>([]);
@@ -102,14 +108,25 @@ export default function ListScreen() {
         id: d.id,
         ...(d.data() as any),
       }));
-      setAvailableProducts(
-        items.map((it: any) => ({
-          id: it.id,
-          name: it.name || it.product_name || "Sem nome",
-          imageUrl: it.imageUrl || null,
-          type: it.type || "Sem categoria",
-        }))
-      );
+      const formatted = items.map((it: any) => ({
+        id: it.id,
+        name: it.name || it.product_name || "Sem nome",
+        imageUrl: it.imageUrl || null,
+        type: it.type || "Sem categoria",
+      }));
+      const mostUsedIds = await getMostUsedProductIds();
+      const sorted = [...formatted].sort((a, b) => {
+        const aFreq = mostUsedIds.indexOf(a.id);
+        const bFreq = mostUsedIds.indexOf(b.id);
+        // Se ambos são mais usados, mantém ordem do ranking
+        if (aFreq !== -1 && bFreq !== -1) return aFreq - bFreq;
+        // Mais usados primeiro
+        if (aFreq !== -1) return -1;
+        if (bFreq !== -1) return 1;
+        // Ordem alfabética como fallback
+        return a.name.localeCompare(b.name);
+      });
+      setAvailableProducts(sorted);
     };
     fetchProducts();
   }, []);
@@ -166,6 +183,7 @@ export default function ListScreen() {
           stock: null,
           imageUrl: product.imageUrl || null,
         });
+        await incrementProductUsage(product.id);
       }
       setSelectedProducts([]);
       Alert.alert(
@@ -224,6 +242,16 @@ export default function ListScreen() {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      const filePath = await exportListAsHtml(listName, products, total);
+      await shareFile(filePath);
+    } catch (error) {
+      console.error("Erro ao compartilhar:", error);
+      Alert.alert("Erro", "Não foi possível compartilhar a lista.");
+    }
+  };
+
   const openModal = () => {
     setSelectedProducts([]);
     setModalVisible(true);
@@ -237,9 +265,14 @@ export default function ListScreen() {
     const isSelected = selectedProducts.includes(item.id);
     return (
       <TouchableOpacity
-        className={`flex-row items-center p-3 border-b border-gray-200 ${
-          isSelected ? "bg-blue-50" : ""
-        }`}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          padding: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+          backgroundColor: isSelected ? colors.primaryFaded : "transparent",
+        }}
         onPress={() => {
           if (isSelected) {
             setSelectedProducts((prev) => prev.filter((id) => id !== item.id));
@@ -251,76 +284,189 @@ export default function ListScreen() {
         {item.imageUrl && (
           <Image
             source={{ uri: item.imageUrl }}
-            className="w-10 h-10 rounded-md mr-3"
+            style={{ width: 40, height: 40, borderRadius: 8, marginRight: 12 }}
           />
         )}
-        <View className="flex-1">
-          <Text className="text-purple-700">{item.name}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: colors.primary }}>{item.name}</Text>
         </View>
-        {isSelected && <Text className="text-green-500 font-bold">✓</Text>}
+        {isSelected && (
+          <Text style={{ color: "#22C55E", fontWeight: "bold" }}>✓</Text>
+        )}
       </TouchableOpacity>
     );
   };
 
   return (
     <>
-      <Header title={listName} signOut={signOut} />
+      <Header title={listName} signOut={signOut}>
+        <TouchableOpacity onPress={handleShare} style={{ marginRight: 12 }}>
+          <Ionicons name="share-outline" size={22} color="#fff" />
+        </TouchableOpacity>
+      </Header>
       <Container>
-        <View className="flex-1 bg-white">
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
           <TouchableOpacity
             onPress={handleFinalizeList}
-            className="absolute top-2 right-2 bg-purple-700 px-3 py-1 rounded-md"
+            style={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              backgroundColor: colors.primary,
+              paddingHorizontal: 12,
+              paddingVertical: 4,
+              borderRadius: 6,
+              zIndex: 10,
+            }}
           >
-            <Text className="text-white text-sm">Finalizar compras</Text>
+            <Text style={{ color: "#fff", fontSize: 14 }}>
+              Finalizar compras
+            </Text>
           </TouchableOpacity>
-          <View className="flex-row justify-between items-center mt-10 mb-4">
-            <Text className="text-base font-bold text-purple-700">
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: 40,
+              marginBottom: 16,
+            }}
+          >
+            <Text
+              style={{ fontSize: 16, fontWeight: "bold", color: colors.primary }}
+            >
               {listName}
             </Text>
-            <Text className="text-xl text-green-900 font-semibold">
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "600",
+                color: isDark ? colors.successText : "#166534",
+              }}
+            >
               Total: R$ {total.toFixed(2)}
             </Text>
           </View>
-          <View className="flex-row justify-between p-2 mb-2 bg-gray-200 rounded-lg">
-            <Text className="text-purple-700 font-bold w-1/3 text-sm">
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              padding: 8,
+              marginBottom: 8,
+              backgroundColor: colors.card,
+              borderRadius: 8,
+            }}
+          >
+            <Text
+              style={{
+                color: colors.primary,
+                fontWeight: "bold",
+                width: "33.333%",
+                fontSize: 14,
+              }}
+            >
               Produto
             </Text>
-            <View className="flex-row justify-between w-2/3 px-2">
-              <Text className="text-purple-700 font-bold text-sm w-12 text-center">
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                width: "66.666%",
+                paddingHorizontal: 8,
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.primary,
+                  fontWeight: "bold",
+                  width: 48,
+                  textAlign: "center",
+                  fontSize: 14,
+                }}
+              >
                 Est.
               </Text>
-              <Text className="text-purple-700 font-bold text-sm w-12 text-center">
+              <Text
+                style={{
+                  color: colors.primary,
+                  fontWeight: "bold",
+                  width: 48,
+                  textAlign: "center",
+                  fontSize: 14,
+                }}
+              >
                 Qtd
               </Text>
-              <Text className="text-purple-700 font-bold text-sm w-20 text-center">
+              <Text
+                style={{
+                  color: colors.primary,
+                  fontWeight: "bold",
+                  width: 80,
+                  textAlign: "center",
+                  fontSize: 14,
+                }}
+              >
                 Valor
               </Text>
-              <View className="w-24" />
+              <View style={{ width: 96 }} />
             </View>
           </View>
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
             {products.map((p) => {
               const isComplete = p.quantity > 0 && p.price > 0;
-              const backgroundClass = isComplete
-                ? "bg-green-300"
-                : "bg-zinc-100";
               return (
                 <View
                   key={p.id}
-                  className={`flex-row justify-between p-2 rounded-xl mb-3 ${backgroundClass}`}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    padding: 8,
+                    borderRadius: 12,
+                    marginBottom: 12,
+                    backgroundColor: isComplete
+                      ? isDark
+                        ? "#1a3a1a"
+                        : "#86EFAC"
+                      : colors.card,
+                  }}
                 >
-                  <View className="flex-row items-center w-1/3">
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      width: "33.333%",
+                    }}
+                  >
                     <Text
-                      className="text-purple-700 text-sm"
+                      style={{
+                        color: colors.primary,
+                        fontSize: 14,
+                      }}
                       numberOfLines={1}
                       ellipsizeMode="tail"
                     >
                       {p.name}
                     </Text>
                   </View>
-                  <View className="flex-row items-center mt-2 w-2/3 gap-1 mr-2">
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginTop: 8,
+                      width: "66.666%",
+                      gap: 4,
+                      marginRight: 8,
+                    }}
+                  >
                     <TextInput
-                      className="py-1 text-center w-10 rounded-md bg-zinc-200"
+                      style={{
+                        paddingVertical: 4,
+                        textAlign: "center",
+                        width: 40,
+                        borderRadius: 6,
+                        backgroundColor: isDark ? colors.cardAlt : "#e5e7eb",
+                        color: colors.text,
+                      }}
                       keyboardType="numeric"
                       value={stockInputs[p.id] || ""}
                       onChangeText={(text) =>
@@ -330,9 +476,17 @@ export default function ListScreen() {
                         }))
                       }
                       placeholder="0"
+                      placeholderTextColor={colors.textSecondary}
                     />
                     <TextInput
-                      className="p-1 text-center w-10 rounded-md bg-zinc-200"
+                      style={{
+                        padding: 4,
+                        textAlign: "center",
+                        width: 40,
+                        borderRadius: 6,
+                        backgroundColor: isDark ? colors.cardAlt : "#e5e7eb",
+                        color: colors.text,
+                      }}
                       keyboardType="numeric"
                       value={qtyInputs[p.id]}
                       onChangeText={(text) =>
@@ -343,7 +497,15 @@ export default function ListScreen() {
                       }
                     />
                     <TextInput
-                      className="p-1 text-center w-16 mr-2 rounded-md bg-zinc-200"
+                      style={{
+                        padding: 4,
+                        textAlign: "center",
+                        width: 64,
+                        marginRight: 8,
+                        borderRadius: 6,
+                        backgroundColor: isDark ? colors.cardAlt : "#e5e7eb",
+                        color: colors.text,
+                      }}
                       keyboardType={
                         Platform.OS === "ios" ? "decimal-pad" : "numeric"
                       }
@@ -356,16 +518,18 @@ export default function ListScreen() {
                       }
                     />
                     <TouchableOpacity
-                      className="px-3 py-1 rounded-md"
+                      style={{ paddingHorizontal: 12, paddingVertical: 4 }}
                       onPress={() => handleSaveProduct(p.id)}
                     >
-                      <Text className="text-lg">✅</Text>
+                      <Text style={{ fontSize: 18 }}>✅</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      className="px-3 py-1 rounded-md"
+                      style={{ paddingHorizontal: 12, paddingVertical: 4 }}
                       onPress={() => handleRemoveProduct(p.id)}
                     >
-                      <Text className="text-sm font-bold">🗑️</Text>
+                      <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+                        🗑️
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -373,27 +537,62 @@ export default function ListScreen() {
             })}
           </ScrollView>
           <TouchableOpacity
-            className="bg-purple-700 rounded-full items-center mt-4 p-3"
+            style={{
+              backgroundColor: colors.primary,
+              borderRadius: 999,
+              alignItems: "center",
+              marginTop: 16,
+              padding: 12,
+            }}
             onPress={openModal}
           >
-            <Text className="text-white font-bold text-xl">
+            <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 20 }}>
               Adicionar Produto
             </Text>
           </TouchableOpacity>
           <Modal visible={modalVisible} transparent animationType="slide">
-            <View className="flex-1 justify-center items-center bg-black/50">
-              <View className="bg-white p-4 rounded-2xl w-11/12 max-h-[90%]">
-                <Text className="text-lg font-bold mb-4 text-purple-700">
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: colors.overlay,
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: colors.white,
+                  padding: 16,
+                  borderRadius: 16,
+                  width: "91.666%",
+                  maxHeight: "90%",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "bold",
+                    marginBottom: 16,
+                    color: colors.primary,
+                  }}
+                >
                   Selecione um ou mais Produtos
                 </Text>
 
-                {/* ← NOVA PARTE: Input de busca */}
-                <View className="mb-4">
+                <View style={{ marginBottom: 16 }}>
                   <TextInput
-                    className={`border-2 ${
-                      searchQuery ? "border-purple-700" : "border-gray-300"
-                    } rounded-full py-2 px-6 mb-4 bg-gray-100`}
+                    style={{
+                      borderWidth: 2,
+                      borderColor: searchQuery ? colors.primary : colors.border,
+                      borderRadius: 999,
+                      paddingVertical: 8,
+                      paddingHorizontal: 24,
+                      marginBottom: 16,
+                      backgroundColor: colors.card,
+                      color: colors.text,
+                    }}
                     placeholder="Buscar produto por nome..."
+                    placeholderTextColor={colors.textSecondary}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                     autoCapitalize="none"
@@ -401,7 +600,6 @@ export default function ListScreen() {
                   />
                 </View>
 
-                {/* ← SectionList com filtro dinâmico */}
                 <SectionList
                   sections={Object.values(
                     availableProducts
@@ -409,7 +607,7 @@ export default function ListScreen() {
                         item.name
                           ?.toLowerCase()
                           .includes(searchQuery.toLowerCase())
-                      ) // ← Filtra por nome (case-insensitive)
+                      )
                       .reduce((acc, item) => {
                         const type = item.type || "Outros";
                         if (!acc[type]) acc[type] = { title: type, data: [] };
@@ -420,40 +618,57 @@ export default function ListScreen() {
                   keyExtractor={(item) => item.id}
                   renderItem={renderItem}
                   renderSectionHeader={({ section: { title } }) => (
-                    <Text className="text-base font-bold bg-gray-100 px-2 py-1 text-purple-700">
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        backgroundColor: colors.card,
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        color: colors.primary,
+                      }}
+                    >
                       {title}
                     </Text>
                   )}
                   style={{ maxHeight: 320 }}
                   ListEmptyComponent={
-                    <Text className="text-center text-gray-500 py-4">
+                    <Text
+                      style={{
+                        textAlign: "center",
+                        color: colors.textSecondary,
+                        paddingVertical: 16,
+                      }}
+                    >
                       {searchQuery
                         ? `Nenhum produto encontrado para "${searchQuery}"`
                         : "Nenhum produto disponível"}
                     </Text>
-                  } // ← Opcional: Mensagem quando vazio
+                  }
                 />
 
-                <View className="flex-row justify-between mt-4">
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }}>
                   <TouchableOpacity
-                    className={`flex-1 items-center justify-center px-4 py-2 rounded-md mr-2 ${
-                      selectedProducts.length > 0
-                        ? "bg-purple-700 border border-purple-700"
-                        : "bg-gray-200 border border-gray-300"
-                    }`}
+                    style={{
+                      flex: 1,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingHorizontal: 16,
+                      paddingVertical: 8,
+                      borderRadius: 6,
+                      marginRight: 8,
+                      backgroundColor:
+                        selectedProducts.length > 0
+                          ? colors.primary
+                          : "#9CA3AF",
+                    }}
                     onPress={() => {
                       handleAddProducts(selectedProducts);
-                      setSearchQuery(""); // ← Limpa busca ao adicionar
+                      setSearchQuery("");
                     }}
                     disabled={selectedProducts.length === 0}
                   >
-                    <Text
-                      className={`font-bold ${
-                        selectedProducts.length > 0
-                          ? "text-white"
-                          : "text-gray-500"
-                      }`}
-                    >
+                    <Text style={{ color: "#fff", fontWeight: "bold" }}>
                       Adicionar{" "}
                       {selectedProducts.length > 0
                         ? `(${selectedProducts.length})`
@@ -461,13 +676,31 @@ export default function ListScreen() {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    className="flex-1 border border-gray-300 items-center justify-center px-4 py-2 rounded-md ml-2 bg-gray-100"
+                    style={{
+                      flex: 1,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingHorizontal: 16,
+                      paddingVertical: 8,
+                      borderRadius: 6,
+                      marginLeft: 8,
+                      backgroundColor: colors.card,
+                    }}
                     onPress={() => {
                       setModalVisible(false);
-                      setSearchQuery(""); // ← Limpa busca ao fechar
+                      setSearchQuery("");
                     }}
                   >
-                    <Text className="text-gray-600 font-bold">Fechar</Text>
+                    <Text
+                      style={{
+                        color: isDark ? colors.textSecondary : "#4B5563",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Fechar
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>

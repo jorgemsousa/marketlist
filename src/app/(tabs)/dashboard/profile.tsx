@@ -8,24 +8,26 @@ import {
   Alert,
   Image,
 } from "react-native";
-import { collection, query, getDocs, where, limit } from "firebase/firestore";
+import { collection, query, getDocs, where } from "firebase/firestore";
 import Header from "@/src/components/header";
 import { auth, db } from "@/src/database/firebaseConfig";
 import { router } from "expo-router";
+import { useTheme } from "@/src/contexts/ThemeContext";
 
 interface UserProps {
-  email: string,
-  name: string,
-  image: string,
+  email: string;
+  name: string;
+  image: string;
 }
 
 const Profile = () => {
+  const { colors, isDark } = useTheme();
   const [userData, setUserData] = useState<UserProps | null>(null);
   const [editando, setEditando] = useState(false);
-  
+
   const signOut = () => {
     auth.signOut();
-    router.replace('/login');
+    router.replace("/login");
   };
 
   useEffect(() => {
@@ -38,9 +40,7 @@ const Profile = () => {
         if (!snapshot.empty) {
           const userDoc = snapshot.docs[0];
           const data = userDoc.data();
-
-          setUserData(data as UserProps)
-
+          setUserData(data as UserProps);
         } else {
           console.log("Nenhum usuário encontrado");
         }
@@ -60,45 +60,107 @@ const Profile = () => {
   return (
     <>
       <Header title="Perfil" signOut={signOut} />
-      <View className="flex-1 p-4 bg-white">
-        <View className="items-center mb-16">
-        
+      <View style={{ flex: 1, padding: 16, backgroundColor: colors.background }}>
+        <View style={{ alignItems: "center", marginBottom: 64 }}>
           {editando ? (
             <>
               <TextInput
                 placeholder="Nome"
+                placeholderTextColor={colors.textSecondary}
                 value={userData?.name || ""}
                 onChangeText={(text) =>
-                  setUserData((prev) => prev ? { ...prev, name: text } : { email: "", image: "", password: "", name: text })
+                  setUserData((prev) =>
+                    prev
+                      ? { ...prev, name: text }
+                      : { email: "", image: "", name: text }
+                  )
                 }
-                className="border-2 border-gray-300 rounded-full p-4 mt-8 bg-gray-100 w-full"
+                style={{
+                  borderWidth: 2,
+                  borderColor: colors.border,
+                  borderRadius: 999,
+                  padding: 16,
+                  marginTop: 32,
+                  backgroundColor: colors.card,
+                  color: colors.text,
+                  width: "100%",
+                }}
               />
               <TextInput
                 placeholder="E-mail"
+                placeholderTextColor={colors.textSecondary}
                 value={userData?.email}
                 onChangeText={(text) =>
-                  setUserData((prev) => prev ? { ...prev, email: text } : { email: text, image: "", password: "", name: "" })
+                  setUserData((prev) =>
+                    prev
+                      ? { ...prev, email: text }
+                      : { email: text, image: "", name: "" }
+                  )
                 }
-                className="border-2 border-gray-300 rounded-full p-4 mt-4 bg-gray-100 w-full"
+                style={{
+                  borderWidth: 2,
+                  borderColor: colors.border,
+                  borderRadius: 999,
+                  padding: 16,
+                  marginTop: 16,
+                  backgroundColor: colors.card,
+                  color: colors.text,
+                  width: "100%",
+                }}
               />
             </>
           ) : (
-            <View className="w-full items-center bg-purple-700 pb-8 pt-16 rounded-2xl mt-16">
+            <View
+              style={{
+                width: "100%",
+                alignItems: "center",
+                backgroundColor: colors.primary,
+                paddingBottom: 32,
+                paddingTop: 64,
+                borderRadius: 16,
+                marginTop: 64,
+              }}
+            >
               <Image
-                source={{ uri: userData?.image || 'User' }}
-                style={{ width: 140, height: 140, borderRadius: 70, borderWidth: 3, borderColor: "#cccccc", marginBottom: 4 }}
+                source={{ uri: userData?.image || "User" }}
+                style={{
+                  width: 140,
+                  height: 140,
+                  borderRadius: 70,
+                  borderWidth: 3,
+                  borderColor: "#cccccc",
+                  marginBottom: 4,
+                }}
               />
-              <Text className="text-2xl font-bold text-white mt-4">{userData?.name}</Text>
-              <Text className="text-lg text-purple-200">{userData?.email}</Text>
+              <Text
+                style={{
+                  fontSize: 24,
+                  fontWeight: "bold",
+                  color: "#fff",
+                  marginTop: 16,
+                }}
+              >
+                {userData?.name}
+              </Text>
+              <Text style={{ fontSize: 18, color: "#D8B4FE" }}>
+                {userData?.email}
+              </Text>
             </View>
           )}
         </View>
 
         <TouchableOpacity
           onPress={editando ? salvarPerfil : () => setEditando(true)}
-          className="bg-purple-700 p-3 rounded-full items-center mb-4 mt-8"
+          style={{
+            backgroundColor: colors.primary,
+            padding: 12,
+            borderRadius: 999,
+            alignItems: "center",
+            marginBottom: 16,
+            marginTop: 32,
+          }}
         >
-          <Text className="text-white text-xl font-bold">
+          <Text style={{ color: "#fff", fontSize: 20, fontWeight: "bold" }}>
             {editando ? "Salvar Perfil" : "Editar Perfil"}
           </Text>
         </TouchableOpacity>
@@ -106,9 +168,23 @@ const Profile = () => {
         {editando && (
           <TouchableOpacity
             onPress={() => setEditando(false)}
-            className='border border-purple-700 items-center justify-center px-full py-4 rounded-full min-w-full my-2'
+            style={{
+              borderWidth: 1,
+              borderColor: colors.primary,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: 16,
+              borderRadius: 999,
+              marginVertical: 8,
+            }}
           >
-            <Text className="text-zinc-500 text-xl font-semibold">
+            <Text
+              style={{
+                color: isDark ? colors.textSecondary : "#71717a",
+                fontSize: 20,
+                fontWeight: "600",
+              }}
+            >
               Cancelar
             </Text>
           </TouchableOpacity>

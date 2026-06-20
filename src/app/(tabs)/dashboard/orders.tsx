@@ -1,4 +1,3 @@
-// app/(tabs)/orders.tsx
 import React, { useEffect, useState } from "react";
 import {
   FlatList,
@@ -22,6 +21,7 @@ import {
 } from "firebase/firestore";
 import Container from "@/src/components/container";
 import Header from "@/src/components/header";
+import { useTheme } from "@/src/contexts/ThemeContext";
 
 interface List {
   id: string;
@@ -31,6 +31,7 @@ interface List {
 }
 
 const Orders: React.FC = () => {
+  const { colors, isDark } = useTheme();
   const [listas, setListas] = useState<List[]>([]);
   const [novaListaNome, setNovaListaNome] = useState("");
   const [loading, setLoading] = useState(false);
@@ -76,7 +77,6 @@ const Orders: React.FC = () => {
     }
 
     try {
-      // cria no Firestore
       const docRef = await addDoc(collection(db, "lists"), {
         name: novaListaNome.trim(),
         total_value: 0,
@@ -85,7 +85,6 @@ const Orders: React.FC = () => {
         created_at: serverTimestamp(),
       });
 
-      // atualiza estado localmente para refletir imediatamente
       setListas((prev) => [
         {
           id: docRef.id,
@@ -98,8 +97,6 @@ const Orders: React.FC = () => {
 
       setNovaListaNome("");
       Alert.alert("Sucesso", "Lista criada com sucesso!");
-      // opcional: navegar direto para a lista criada:
-      // router.push(`/list/${docRef.id}`);
     } catch (err) {
       console.error("Erro ao criar lista:", err);
       Alert.alert("Erro", "Não foi possível criar a lista.");
@@ -110,54 +107,108 @@ const Orders: React.FC = () => {
     <>
       <Header title="Listas de Compras" signOut={signOut} />
       <Container>
-        <SafeAreaView className="flex-1 x-4 bg-white">
-          {/* Cabeçalho + botão de criar */}
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-purple-700 font-bold text-xl">
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: colors.background }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 16,
+            }}
+          >
+            <Text
+              style={{
+                color: colors.primary,
+                fontWeight: "bold",
+                fontSize: 20,
+              }}
+            >
               Listas Abertas
             </Text>
           </View>
 
-          {/* Input para nova lista + botão */}
-          <View className="mb-4">
+          <View style={{ marginBottom: 16 }}>
             <TextInput
               placeholder="Nome da nova lista"
+              placeholderTextColor={colors.textSecondary}
               value={novaListaNome}
               onChangeText={setNovaListaNome}
-              className="border-2 border-gray-300 rounded-full px-4 py-2 bg-gray-100"
+              style={{
+                borderWidth: 2,
+                borderColor: colors.border,
+                borderRadius: 999,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                backgroundColor: colors.card,
+                color: colors.text,
+              }}
             />
             <TouchableOpacity
               onPress={adicionarLista}
-              className="bg-purple-700 mt-3 p-3 rounded-full items-center"
+              style={{
+                backgroundColor: colors.primary,
+                marginTop: 12,
+                padding: 12,
+                borderRadius: 999,
+                alignItems: "center",
+              }}
             >
-              <Text className="text-white font-bold">Criar Lista</Text>
+              <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                Criar Lista
+              </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Lista de listas abertas */}
           <FlatList
             data={listas}
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
-              <View className="mt-8 items-center">
-                <Text className="text-gray-400">Nenhuma lista aberta</Text>
+              <View style={{ marginTop: 32, alignItems: "center" }}>
+                <Text style={{ color: colors.textSecondary }}>
+                  Nenhuma lista aberta
+                </Text>
               </View>
             }
             renderItem={({ item }) => (
               <TouchableOpacity
                 onPress={() => router.push(`/list/${item.id}`)}
-                className="flex-row items-center justify-between p-4 rounded-xl bg-zinc-100 mb-3"
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: 16,
+                  borderRadius: 12,
+                  backgroundColor: colors.card,
+                  marginBottom: 12,
+                }}
               >
                 <View>
-                  <Text className="text-md text-purple-600 font-semibold">
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: colors.primary,
+                      fontWeight: "600",
+                    }}
+                  >
                     {item.name}
                   </Text>
-                  <Text className="text-sm text-purple-400">
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: isDark ? colors.textSecondary : "#A855F7",
+                    }}
+                  >
                     R$ {item.total_value?.toFixed(2)}
                   </Text>
                 </View>
 
-                <Ionicons name="chevron-forward" size={20} color="#9333ea" />
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={colors.primary}
+                />
               </TouchableOpacity>
             )}
           />
