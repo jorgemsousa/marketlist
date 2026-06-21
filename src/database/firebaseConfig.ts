@@ -1,24 +1,19 @@
 // firebaseConfig.ts
 import { initializeApp } from "firebase/app";
-import { initializeAuth } from "firebase/auth";
-import { initializeFirestore, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyDfhYOKC1jAZ8NzQDuMd2Dz6gj8_EjAr_s",
+  authDomain: "marketlist-26e37.firebaseapp.com",
+  projectId: "marketlist-26e37",
+  storageBucket: "marketlist-26e37.appspot.com",
+  messagingSenderId: "41443072478",
+  appId: "1:41443072478:web:8e2e7bb60828e0eaaee54f",
 };
 
 const app = initializeApp(firebaseConfig);
-
-// Auth with React Native persistence
-const auth = initializeAuth(app);
-
-// Firestore with unlimited offline cache
-const db = initializeFirestore(app, {
-  cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-});
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 export { auth, db };
