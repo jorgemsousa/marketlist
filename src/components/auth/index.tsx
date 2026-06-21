@@ -139,7 +139,7 @@ const Auth = ({ onClose }: Props) => {
           backgroundColor: colors.primary,
           padding: 16,
           borderRadius: 999,
-          marginBottom: 80,
+          marginBottom: 16,
         }}
         disabled={loading || !email || !password}
       >

@@ -85,9 +85,9 @@ const LoginModal = ({ open, onClose }: Props) => {
                 source={require("../../assets/images/login.png")}
                 style={{
                   width,
-                  height: height * 0.3,
+                  height: height * 0.15,
                   resizeMode: "contain",
-                  marginVertical: 20,
+                  marginVertical: 12,
                 }}
               />
 
