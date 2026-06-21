@@ -253,6 +253,7 @@ const Dashboard = () => {
                 data={closedLists}
                 keyExtractor={(item) => item.id}
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 80 }}
                 renderItem={({ item }) => (
                   <TouchableOpacity onPress={() => handleOpenList(item)}>
                     <View

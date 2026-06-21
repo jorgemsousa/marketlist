@@ -598,20 +598,45 @@ export default function ListScreen() {
               );
             })}
           </ScrollView>
-          <TouchableOpacity
-            style={{
-              backgroundColor: colors.primary,
-              borderRadius: 999,
-              alignItems: "center",
-              marginTop: 16,
-              padding: 12,
-            }}
-            onPress={openModal}
-          >
-            <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 20 }}>
-              Adicionar Produto
-            </Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 12, marginTop: 16 }}>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                backgroundColor: colors.primary,
+                borderRadius: 999,
+                alignItems: "center",
+                padding: 12,
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 8,
+              }}
+              onPress={() => setScannerVisible(true)}
+            >
+              <Ionicons name="camera" size={20} color="#fff" />
+              <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 18 }}>
+                Escanear
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                borderWidth: 2,
+                borderColor: colors.primary,
+                borderRadius: 999,
+                alignItems: "center",
+                padding: 12,
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 8,
+              }}
+              onPress={openModal}
+            >
+              <Ionicons name="list" size={20} color={colors.primary} />
+              <Text style={{ color: colors.primary, fontWeight: "bold", fontSize: 18 }}>
+                Adicionar
+              </Text>
+            </TouchableOpacity>
+          </View>
           <Modal visible={modalVisible} transparent animationType="slide">
             <View
               style={{

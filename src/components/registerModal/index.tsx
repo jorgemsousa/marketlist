@@ -7,6 +7,7 @@ import {
   Modal,
   Image,
   useWindowDimensions,
+  ScrollView,
 } from "react-native";
 import Register from "../register";
 import { useTheme } from "@/src/contexts/ThemeContext";
@@ -66,29 +67,33 @@ const RegisterModal = ({ open, onClose }: Props) => {
                 padding: 24,
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
+                maxHeight: "90%",
               }}
             >
-              <Text
-                style={{
-                  color: colors.primary,
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  fontSize: 30,
-                  marginBottom: 16,
-                }}
-              >
-                Cadastro
-              </Text>
-              <Image
-                source={require("../../assets/images/register.png")}
-                style={{
-                  width,
-                  height: height * 0.2,
-                  resizeMode: "contain",
-                  marginVertical: 20,
-                }}
-              />
-              <Register onClose={onClose} />
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <Text
+                  style={{
+                    color: colors.primary,
+                    textAlign: "center",
+                    fontWeight: "bold",
+                    fontSize: 30,
+                    marginBottom: 16,
+                  }}
+                >
+                  Cadastro
+                </Text>
+                <Image
+                  source={require("../../assets/images/register.png")}
+                  style={{
+                    width: width - 48,
+                    height: height * 0.15,
+                    resizeMode: "contain",
+                    marginVertical: 12,
+                    alignSelf: "center",
+                  }}
+                />
+                <Register onClose={onClose} />
+              </ScrollView>
             </Animated.View>
           </View>
         </Modal>

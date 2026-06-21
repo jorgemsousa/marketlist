@@ -159,17 +159,20 @@ export async function lookupByEan(
   const local = await searchLocalByEan(ean);
   if (local) return { product: local, isNew: false };
 
-  // 2. Busca na OpenFoodFacts
+  // 2. Busca imagem na API customizada primeiro
+  let customImageUrl: string | null = null;
+  try {
+    customImageUrl = await fetchImageFromCustomApi(ean);
+  } catch {
+    // silencioso
+  }
+
+  // 3. Busca na OpenFoodFacts para obter nome/categoria
   const off = await searchOpenFoodFacts(ean);
   if (off && off.name) {
-    // Tenta buscar imagem da API customizada
-    let imageUrl = off.imageUrl;
-    if (!imageUrl) {
-      const customImg = await fetchImageFromCustomApi(ean);
-      if (customImg) imageUrl = customImg;
-    }
+    const imageUrl = customImageUrl || off.imageUrl;
 
-    // 3. Salva no Firestore
+    // 4. Salva no Firestore
     const docRef = await addDoc(collection(db, "products"), {
       name: off.name,
       imageUrl: imageUrl,
@@ -184,7 +187,7 @@ export async function lookupByEan(
     };
   }
 
-  // 4. Não encontrou — retorna null
+  // 5. Não encontrou — retorna null
   return null;
 }
 

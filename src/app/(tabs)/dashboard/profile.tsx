@@ -7,12 +7,14 @@ import {
   TextInput,
   Alert,
   Image,
+  ScrollView,
 } from "react-native";
 import { collection, query, getDocs, where } from "firebase/firestore";
 import Header from "@/src/components/header";
 import { auth, db } from "@/src/database/firebaseConfig";
 import { router } from "expo-router";
 import { useTheme } from "@/src/contexts/ThemeContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface UserProps {
   email: string;
@@ -25,9 +27,14 @@ const Profile = () => {
   const [userData, setUserData] = useState<UserProps | null>(null);
   const [editando, setEditando] = useState(false);
 
-  const signOut = () => {
-    auth.signOut();
-    router.replace("/login");
+  const signOut = async () => {
+    try {
+      await AsyncStorage.removeItem("userCredentials");
+      await auth.signOut();
+      router.replace("/");
+    } catch {
+      Alert.alert("Erro", "Não foi possível fazer logout.");
+    }
   };
 
   useEffect(() => {
@@ -60,7 +67,10 @@ const Profile = () => {
   return (
     <>
       <Header title="Perfil" signOut={signOut} />
-      <View style={{ flex: 1, padding: 16, backgroundColor: colors.background }}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: colors.background }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 80 }}
+      >
         <View style={{ alignItems: "center", marginBottom: 64 }}>
           {editando ? (
             <>
@@ -189,7 +199,7 @@ const Profile = () => {
             </Text>
           </TouchableOpacity>
         )}
-      </View>
+      </ScrollView>
     </>
   );
 };

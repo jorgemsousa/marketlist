@@ -12,6 +12,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "@/src/components/header";
@@ -20,6 +21,9 @@ import { auth, db } from "@/src/database/firebaseConfig";
 import { router } from "expo-router";
 import SelectSetor from "@/src/components/picker";
 import { useTheme } from "@/src/contexts/ThemeContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import BarcodeScanner from "@/src/components/barcodeScanner";
+import { lookupByEan } from "@/src/hooks/useEanLookup";
 
 interface Product {
   id: string;
@@ -52,6 +56,8 @@ const Products: React.FC = () => {
   const [newProductType, setNewProductType] = useState("");
   const [newProductEan, setNewProductEan] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [scanningLoading, setScanningLoading] = useState(false);
   const [productTypes, setProductTypes] = useState<string[]>([]);
 
   const fetchProducts = async () => {
@@ -68,9 +74,55 @@ const Products: React.FC = () => {
     setProductTypes(categories);
   };
 
-  const signOut = () => {
-    auth.signOut();
-    router.replace("/login");
+  const signOut = async () => {
+    try {
+      await AsyncStorage.removeItem("userCredentials");
+      await auth.signOut();
+      router.replace("/");
+    } catch {
+      Alert.alert("Erro", "Não foi possível fazer logout.");
+    }
+  };
+
+  const handleBarCodeScanned = async (ean: string) => {
+    setScannerVisible(false);
+    setScanningLoading(true);
+    try {
+      const result = await lookupByEan(ean);
+      if (result) {
+        const { product, isNew } = result;
+        Alert.alert(
+          isNew ? "✅ Produto encontrado!" : "📦 Produto já cadastrado",
+          `${product.name}\n\nCategoria: ${product.type}\nEAN: ${ean}`,
+          [
+            {
+              text: "OK",
+              onPress: () => fetchProducts(),
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Produto não encontrado",
+          `Nenhum produto encontrado para o código ${ean}.`,
+          [
+            {
+              text: "Cadastrar manualmente",
+              onPress: () => {
+                setNewProductEan(ean);
+                setIsAdding(true);
+              },
+            },
+            { text: "Cancelar" },
+          ]
+        );
+      }
+    } catch (err) {
+      console.error("Erro no scan:", err);
+      Alert.alert("Erro", "Falha ao buscar produto. Tente novamente.");
+    } finally {
+      setScanningLoading(false);
+    }
   };
 
   const fallbackImage = require("../../../../assets/images/icon.png");
@@ -186,16 +238,28 @@ const Products: React.FC = () => {
           >
             Produtos por categoria
           </Text>
-          <TouchableOpacity
-            onPress={() => setIsAdding(true)}
-            style={{
-              backgroundColor: colors.primary,
-              padding: 8,
-              borderRadius: 8,
-            }}
-          >
-            <Ionicons name="add" size={24} color="#fff" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <TouchableOpacity
+              onPress={() => setScannerVisible(true)}
+              style={{
+                backgroundColor: colors.primary,
+                padding: 8,
+                borderRadius: 8,
+              }}
+            >
+              <Ionicons name="camera" size={24} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setIsAdding(true)}
+              style={{
+                backgroundColor: colors.primary,
+                padding: 8,
+                borderRadius: 8,
+              }}
+            >
+              <Ionicons name="add" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <FlatList
@@ -203,6 +267,7 @@ const Products: React.FC = () => {
           keyExtractor={(item) => item}
           renderItem={({ item }) => renderSection(item)}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 80 }}
         />
 
         <Modal
@@ -322,6 +387,47 @@ const Products: React.FC = () => {
             </KeyboardAvoidingView>
           </View>
         </Modal>
+        <BarcodeScanner
+          visible={scannerVisible}
+          onScan={handleBarCodeScanned}
+          onClose={() => setScannerVisible(false)}
+        />
+
+        {scanningLoading && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 999,
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: colors.card,
+                padding: 32,
+                borderRadius: 16,
+                alignItems: "center",
+              }}
+            >
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text
+                style={{
+                  color: colors.text,
+                  marginTop: 12,
+                  fontSize: 16,
+                }}
+              >
+                Buscando produto...
+              </Text>
+            </View>
+          </View>
+        )}
       </SafeAreaView>
     </>
   );

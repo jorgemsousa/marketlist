@@ -7,6 +7,14 @@
       "android": {
         "buildType": "apk",
         "distribution": "internal"
+      },
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDfhYOKC1jAZ8NzQDuMd2Dz6gj8_EjAr_s",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "marketlist-26e37.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "marketlist-26e37",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "marketlist-26e37.appspot.com",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "41443072478",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:41443072478:web:8e2e7bb60828e0eaaee54f"
       }
     },
     "production": {}

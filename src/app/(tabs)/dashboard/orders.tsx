@@ -22,6 +22,7 @@ import {
 import Container from "@/src/components/container";
 import Header from "@/src/components/header";
 import { useTheme } from "@/src/contexts/ThemeContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface List {
   id: string;
@@ -61,9 +62,14 @@ const Orders: React.FC = () => {
     }
   };
 
-  const signOut = () => {
-    auth.signOut();
-    router.replace("/login");
+  const signOut = async () => {
+    try {
+      await AsyncStorage.removeItem("userCredentials");
+      await auth.signOut();
+      router.replace("/");
+    } catch {
+      Alert.alert("Erro", "Não foi possível fazer logout.");
+    }
   };
 
   useEffect(() => {
@@ -164,6 +170,7 @@ const Orders: React.FC = () => {
           <FlatList
             data={listas}
             keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingBottom: 80 }}
             ListEmptyComponent={
               <View style={{ marginTop: 32, alignItems: "center" }}>
                 <Text style={{ color: colors.textSecondary }}>

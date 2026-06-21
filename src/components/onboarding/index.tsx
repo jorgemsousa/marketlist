@@ -7,6 +7,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -44,10 +45,11 @@ const DATA: OnboardingItem[] = [
 ];
 
 function List() {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [finishing, setFinishing] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const isSmall = height < 700;
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -58,13 +60,9 @@ function List() {
     if (currentIndex < DATA.length - 1) {
       flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
-      // Último slide — finalizar onboarding
       setFinishing(true);
       try {
-        // Salvar que onboarding foi concluído
         await AsyncStorage.setItem("onboarding_completed", "true");
-
-        // Verificar se usuário já está logado
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           unsubscribe();
           if (user) {
@@ -79,52 +77,59 @@ function List() {
     }
   };
 
-  const renderItem = ({ item }: { item: OnboardingItem }) => (
-    <View
-      style={{
-        width,
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingHorizontal: 32,
-      }}
-    >
-      <View
-        style={{
-          width: 120,
-          height: 120,
-          borderRadius: 60,
-          backgroundColor: "#7c3aed",
+  const renderItem = ({ item }: { item: OnboardingItem }) => {
+    const circleSize = isSmall ? 100 : 120;
+    const iconSize = isSmall ? 44 : 56;
+
+    return (
+      <ScrollView
+        style={{ width }}
+        contentContainerStyle={{
+          flexGrow: 1,
           justifyContent: "center",
           alignItems: "center",
-          marginBottom: 48,
+          paddingHorizontal: 32,
         }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <Ionicons name={item.icon} size={56} color="#fff" />
-      </View>
-      <Text
-        style={{
-          fontSize: 28,
-          fontWeight: "700",
-          color: "#1f2937",
-          marginBottom: 16,
-          textAlign: "center",
-        }}
-      >
-        {item.title}
-      </Text>
-      <Text
-        style={{
-          fontSize: 16,
-          color: "#6b7280",
-          textAlign: "center",
-          lineHeight: 24,
-        }}
-      >
-        {item.description}
-      </Text>
-    </View>
-  );
+        <View
+          style={{
+            width: circleSize,
+            height: circleSize,
+            borderRadius: circleSize / 2,
+            backgroundColor: "#7c3aed",
+            justifyContent: "center",
+            alignItems: "center",
+            marginBottom: isSmall ? 32 : 48,
+          }}
+        >
+          <Ionicons name={item.icon} size={iconSize} color="#fff" />
+        </View>
+        <Text
+          style={{
+            fontSize: isSmall ? 24 : 28,
+            fontWeight: "700",
+            color: "#1f2937",
+            marginBottom: 12,
+            textAlign: "center",
+          }}
+        >
+          {item.title}
+        </Text>
+        <Text
+          style={{
+            fontSize: isSmall ? 14 : 16,
+            color: "#6b7280",
+            textAlign: "center",
+            lineHeight: isSmall ? 20 : 24,
+          }}
+        >
+          {item.description}
+        </Text>
+      </ScrollView>
+    );
+  };
 
   if (finishing) {
     return (
@@ -154,7 +159,7 @@ function List() {
         style={{
           flexDirection: "row",
           justifyContent: "center",
-          marginBottom: 24,
+          marginBottom: isSmall ? 16 : 24,
         }}
       >
         {DATA.map((_, i) => (
@@ -170,18 +175,22 @@ function List() {
           />
         ))}
       </View>
-      <View style={{ paddingHorizontal: 32, paddingBottom: 48 }}>
+      <View style={{ paddingHorizontal: 32, paddingBottom: isSmall ? 32 : 48 }}>
         <View
           style={{
             backgroundColor: "#7c3aed",
-            paddingVertical: 16,
+            paddingVertical: isSmall ? 14 : 16,
             borderRadius: 12,
             alignItems: "center",
           }}
         >
           <Text
             onPress={goNext}
-            style={{ color: "#fff", fontSize: 18, fontWeight: "600" }}
+            style={{
+              color: "#fff",
+              fontSize: isSmall ? 16 : 18,
+              fontWeight: "600",
+            }}
           >
             {currentIndex < DATA.length - 1 ? "Próximo" : "Começar"}
           </Text>

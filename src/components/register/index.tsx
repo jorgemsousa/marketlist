@@ -150,6 +150,7 @@ const Register = ({ onClose }: Props) => {
           Cancelar
         </Text>
       </TouchableOpacity>
+      <View style={{ height: 24 }} />
     </View>
   );
 };

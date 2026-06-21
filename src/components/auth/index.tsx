@@ -61,7 +61,7 @@ const Auth = ({ onClose }: Props) => {
       await saveCredentials(email, password);
 
       Alert.alert("Muito bom ter você de volta, aproveite as compras!");
-      router.push("/dashboard");
+      router.replace("/(tabs)/dashboard");
       onClose();
     } catch (error: any) {
       const errorCode = error.code;
@@ -181,6 +181,7 @@ const Auth = ({ onClose }: Props) => {
           Cancelar
         </Text>
       </TouchableOpacity>
+      <View style={{ height: 24 }} />
     </View>
   );
 };
