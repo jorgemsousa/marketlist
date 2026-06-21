@@ -37,7 +37,17 @@
         "origin": false
       }
     },
-    "plugins": ["expo-router", "expo-font"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O MarketList precisa da câmera para escanear códigos de barras dos produtos.",
+          "microphonePermission": "O MarketList precisa do microfone para gravar vídeos."
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },

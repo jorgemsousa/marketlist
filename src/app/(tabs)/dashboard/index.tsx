@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   Image,
+  Alert,
 } from "react-native";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
@@ -23,6 +24,7 @@ import { LinearGradient, useFont, vec } from "@shopify/react-native-skia";
 import Header from "@/src/components/header";
 import Login from "../../login";
 import { useTheme } from "@/src/contexts/ThemeContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Dashboard = () => {
   const auth = getAuth();
@@ -37,9 +39,14 @@ const Dashboard = () => {
     12
   );
 
-  const signOut = () => {
-    auth.signOut();
-    router.replace("/login");
+  const signOut = async () => {
+    try {
+      await AsyncStorage.removeItem("userCredentials");
+      await auth.signOut();
+      router.replace("/");
+    } catch {
+      Alert.alert("Erro", "Não foi possível fazer logout.");
+    }
   };
 
   const handleOpenList = async (list: any) => {

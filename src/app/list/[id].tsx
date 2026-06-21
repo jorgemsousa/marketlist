@@ -10,6 +10,7 @@ import {
   Platform,
   Image,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { auth, db } from "@/src/database/firebaseConfig";
@@ -28,6 +29,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { exportListAsHtml, shareFile } from "@/src/utils/exportList";
 import { useTheme } from "@/src/contexts/ThemeContext";
 import { incrementProductUsage, getMostUsedProductIds } from "@/src/hooks/useProductUsage";
+import BarcodeScanner from "@/src/components/barcodeScanner";
+import { lookupByEan } from "@/src/hooks/useEanLookup";
 
 interface Product {
   id: string;
@@ -56,6 +59,8 @@ export default function ListScreen() {
   const [stockInputs, setStockInputs] = useState<Record<string, string>>({});
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [scanningLoading, setScanningLoading] = useState(false);
 
   const signOut = () => {
     auth.signOut();
@@ -193,6 +198,63 @@ export default function ListScreen() {
     } catch (err) {
       console.error("Erro ao adicionar produtos:", err);
       Alert.alert("Erro", "Não foi possível adicionar os produtos.");
+    }
+  };
+
+  const handleAddSingleProduct = async (
+    product: { id: string; name: string; imageUrl?: string }
+  ) => {
+    if (!id) return;
+    try {
+      const itemsRef = collection(db, "lists", id as string, "items");
+      await addDoc(itemsRef, {
+        name: product.name,
+        quantity: 1,
+        price: 0,
+        stock: null,
+        imageUrl: product.imageUrl || null,
+      });
+      await incrementProductUsage(product.id);
+      Alert.alert("✅ Produto adicionado", `${product.name} foi adicionado à lista!`);
+    } catch (err) {
+      console.error("Erro ao adicionar produto via scan:", err);
+      Alert.alert("Erro", "Não foi possível adicionar o produto.");
+    }
+  };
+
+  const handleBarCodeScanned = async (ean: string) => {
+    setScannerVisible(false);
+    setScanningLoading(true);
+    try {
+      const result = await lookupByEan(ean);
+      if (result) {
+        const { product, isNew } = result;
+        if (isNew) {
+          Alert.alert(
+            "🆕 Novo Produto",
+            `"${product.name}" foi cadastrado automaticamente!\nCategoria: ${product.type}`,
+            [
+              {
+                text: "Adicionar à Lista",
+                onPress: () => handleAddSingleProduct(product as any),
+              },
+            ]
+          );
+        } else {
+          await handleAddSingleProduct(product as any);
+        }
+      } else {
+        Alert.alert(
+          "Produto não encontrado",
+          `Nenhum produto encontrado para o código ${ean}.\n\nCadastre manualmente no botão "Adicionar".`,
+          [{ text: "Ok" }]
+        );
+      }
+    } catch (err) {
+      console.error("Erro no scan EAN:", err);
+      Alert.alert("Erro", "Falha ao buscar produto. Tente novamente.");
+    } finally {
+      setScanningLoading(false);
     }
   };
 
@@ -580,24 +642,41 @@ export default function ListScreen() {
                 </Text>
 
                 <View style={{ marginBottom: 16 }}>
-                  <TextInput
-                    style={{
-                      borderWidth: 2,
-                      borderColor: searchQuery ? colors.primary : colors.border,
-                      borderRadius: 999,
-                      paddingVertical: 8,
-                      paddingHorizontal: 24,
-                      marginBottom: 16,
-                      backgroundColor: colors.card,
-                      color: colors.text,
-                    }}
-                    placeholder="Buscar produto por nome..."
-                    placeholderTextColor={colors.textSecondary}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
+                  <View style={{ flexDirection: "row", gap: 8 }}>
+                    <TextInput
+                      style={{
+                        flex: 1,
+                        borderWidth: 2,
+                        borderColor: searchQuery ? colors.primary : colors.border,
+                        borderRadius: 999,
+                        paddingVertical: 8,
+                        paddingHorizontal: 24,
+                        marginBottom: 16,
+                        backgroundColor: colors.card,
+                        color: colors.text,
+                      }}
+                      placeholder="Buscar produto por nome..."
+                      placeholderTextColor={colors.textSecondary}
+                      value={searchQuery}
+                      onChangeText={setSearchQuery}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    <TouchableOpacity
+                      style={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 21,
+                        backgroundColor: colors.primary,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginBottom: 16,
+                      }}
+                      onPress={() => setScannerVisible(true)}
+                    >
+                      <Ionicons name="camera" size={22} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 <SectionList
@@ -706,6 +785,48 @@ export default function ListScreen() {
               </View>
             </View>
           </Modal>
+
+          <BarcodeScanner
+            visible={scannerVisible}
+            onScan={handleBarCodeScanned}
+            onClose={() => setScannerVisible(false)}
+          />
+
+          {scanningLoading && (
+            <View
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(0,0,0,0.4)",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 999,
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: colors.card,
+                  padding: 32,
+                  borderRadius: 16,
+                  alignItems: "center",
+                }}
+              >
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text
+                  style={{
+                    color: colors.text,
+                    marginTop: 12,
+                    fontSize: 16,
+                  }}
+                >
+                  Buscando produto...
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
       </Container>
     </>

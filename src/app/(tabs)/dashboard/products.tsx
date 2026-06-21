@@ -26,6 +26,8 @@ interface Product {
   name: string;
   imageUrl: string;
   type: string;
+  ean?: string;
+  brand?: string;
 }
 
 const setores = [
@@ -48,6 +50,7 @@ const Products: React.FC = () => {
   const [newProductName, setNewProductName] = useState("");
   const [newProductImageUrl, setNewProductImageUrl] = useState("");
   const [newProductType, setNewProductType] = useState("");
+  const [newProductEan, setNewProductEan] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [productTypes, setProductTypes] = useState<string[]>([]);
 
@@ -86,6 +89,8 @@ const Products: React.FC = () => {
         name: newProductName,
         imageUrl: newProductImageUrl,
         type: newProductType,
+        ean: newProductEan || "",
+        brand: "",
       });
 
       const newProduct: Product = {
@@ -93,6 +98,7 @@ const Products: React.FC = () => {
         name: newProductName,
         imageUrl: newProductImageUrl,
         type: newProductType,
+        ean: newProductEan || "",
       };
 
       setProducts([...products, newProduct]);
@@ -103,6 +109,7 @@ const Products: React.FC = () => {
       setNewProductName("");
       setNewProductImageUrl("");
       setNewProductType("");
+      setNewProductEan("");
       setIsAdding(false);
 
       Alert.alert("Sucesso", "Produto adicionado com sucesso!");
@@ -244,6 +251,22 @@ const Products: React.FC = () => {
                   placeholderTextColor={colors.textSecondary}
                   value={newProductImageUrl}
                   onChangeText={setNewProductImageUrl}
+                  style={{
+                    borderWidth: 2,
+                    borderColor: colors.primary,
+                    borderRadius: 999,
+                    padding: 16,
+                    marginBottom: 16,
+                    backgroundColor: colors.card,
+                    color: colors.text,
+                  }}
+                />
+                <TextInput
+                  placeholder="Código de barras (EAN) — opcional"
+                  placeholderTextColor={colors.textSecondary}
+                  value={newProductEan}
+                  onChangeText={setNewProductEan}
+                  keyboardType="number-pad"
                   style={{
                     borderWidth: 2,
                     borderColor: colors.primary,
