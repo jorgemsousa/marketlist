@@ -2,7 +2,7 @@
   "expo": {
     "name": "marketlist",
     "slug": "marketlist",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "marketlist",
@@ -17,12 +17,16 @@
       "bundleIdentifier": "com.jorgesousa.marketlist"
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#7e22ce"
       },
-      "package": "com.jorgesousa.marketlist"
+      "package": "com.jorgesousa.marketlist",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",

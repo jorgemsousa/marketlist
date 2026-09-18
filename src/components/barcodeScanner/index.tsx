@@ -41,10 +41,20 @@ export default function BarcodeScanner({
 
       CameraView.isAvailableAsync()
         .then((available) => {
-          setCameraAvailable(available);
+          if (!available && Platform.OS === "android") {
+            // On Android, isAvailableAsync may return false incorrectly
+            // due to permissions not being granted yet. Try anyway.
+            setCameraAvailable(true);
+          } else {
+            setCameraAvailable(available);
+          }
         })
         .catch(() => {
-          setCameraAvailable(false);
+          if (Platform.OS === "android") {
+            setCameraAvailable(true);
+          } else {
+            setCameraAvailable(false);
+          }
         });
     }
   }, [visible]);

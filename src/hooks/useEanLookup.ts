@@ -1,5 +1,7 @@
 import { collection, getDocs, addDoc, query, where } from "firebase/firestore";
 import { db } from "@/src/database/firebaseConfig";
+import { inferCategory } from "@/src/utils/categoryHelper";
+import { searchBluesoft } from "@/src/utils/bluesoftApi";
 
 export interface EanProduct {
   id?: string;
@@ -21,58 +23,6 @@ interface OpenFoodFactsResponse {
   };
   status?: number;
   status_verbose?: string;
-}
-
-const CATEGORY_MAP: Record<string, string> = {
-  bebida: "Adega e Bebidas",
-  refrigerante: "Adega e Bebidas",
-  suco: "Adega e Bebidas",
-  água: "Adega e Bebidas",
-  leite: "Frios e Laticínios",
-  laticínio: "Frios e Laticínios",
-  queijo: "Frios e Laticínios",
-  iogurte: "Frios e Laticínios",
-  manteiga: "Frios e Laticínios",
-  carne: "Açougue",
-  frango: "Açougue",
-  boi: "Açougue",
-  porco: "Açougue",
-  hort: "Hortifrúti",
-  fruta: "Hortifrúti",
-  legumes: "Hortifrúti",
-  verdura: "Hortifrúti",
-  padaria: "Padaria",
-  pão: "Padaria",
-  bolo: "Padaria",
-  arroz: "Mercearia",
-  feijão: "Mercearia",
-  macarrão: "Mercearia",
-  farinha: "Mercearia",
-  açúcar: "Mercearia",
-  sal: "Mercearia",
-  óleo: "Mercearia",
-  molho: "Mercearia",
-  enlatado: "Mercearia",
-  limpeza: "Limpeza Doméstica",
-  detergente: "Limpeza Doméstica",
-  sabão: "Limpeza Doméstica",
-  higiene: "Higiene Pessoal e Beleza",
-  shampoo: "Higiene Pessoal e Beleza",
-  sabonete: "Higiene Pessoal e Beleza",
-  pasta: "Higiene Pessoal e Beleza",
-  pescado: "Pescados/Peixaria",
-  peixe: "Pescados/Peixaria",
-};
-
-function inferCategory(categories?: string): string {
-  if (!categories) return "Mercearia";
-  const lower = categories.toLowerCase();
-  for (const [keyword, cat] of Object.entries(CATEGORY_MAP)) {
-    if (lower.includes(keyword)) return cat;
-  }
-  // Pega a primeira categoria da string separada por vírgulas
-  const first = categories.split(",")[0]?.trim();
-  return first || "Mercearia";
 }
 
 /**
@@ -183,6 +133,26 @@ export async function lookupByEan(
 
     return {
       product: { ...off, id: docRef.id, imageUrl },
+      isNew: true,
+    };
+  }
+
+  // 4b. Se não encontrou na OpenFoodFacts, busca na Bluesoft Cosmos API
+  const bluesoft = await searchBluesoft(ean);
+  if (bluesoft && bluesoft.name) {
+    const imageUrl = customImageUrl || bluesoft.imageUrl;
+
+    // Salva no Firestore
+    const docRef = await addDoc(collection(db, "products"), {
+      name: bluesoft.name,
+      imageUrl: imageUrl,
+      type: bluesoft.type,
+      ean: ean,
+      brand: bluesoft.brand || "",
+    });
+
+    return {
+      product: { ...bluesoft, id: docRef.id, imageUrl },
       isNew: true,
     };
   }
