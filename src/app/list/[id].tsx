@@ -413,6 +413,7 @@ export default function ListScreen() {
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
+              alignItems: "center",
               padding: 8,
               marginBottom: 8,
               backgroundColor: colors.card,
@@ -423,8 +424,9 @@ export default function ListScreen() {
               style={{
                 color: colors.primary,
                 fontWeight: "bold",
-                width: "33.333%",
+                flex: 1,
                 fontSize: 14,
+                marginRight: 4,
               }}
             >
               Produto
@@ -432,16 +434,15 @@ export default function ListScreen() {
             <View
               style={{
                 flexDirection: "row",
-                justifyContent: "space-between",
-                width: "66.666%",
-                paddingHorizontal: 8,
+                alignItems: "center",
+                gap: 4,
               }}
             >
               <Text
                 style={{
                   color: colors.primary,
                   fontWeight: "bold",
-                  width: 48,
+                  width: 36,
                   textAlign: "center",
                   fontSize: 14,
                 }}
@@ -452,7 +453,7 @@ export default function ListScreen() {
                 style={{
                   color: colors.primary,
                   fontWeight: "bold",
-                  width: 48,
+                  width: 36,
                   textAlign: "center",
                   fontSize: 14,
                 }}
@@ -463,14 +464,14 @@ export default function ListScreen() {
                 style={{
                   color: colors.primary,
                   fontWeight: "bold",
-                  width: 80,
+                  width: 56,
                   textAlign: "center",
                   fontSize: 14,
                 }}
               >
                 Valor
               </Text>
-              <View style={{ width: 96 }} />
+              <View style={{ width: 68 }} />
             </View>
           </View>
           <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
@@ -482,6 +483,7 @@ export default function ListScreen() {
                   style={{
                     flexDirection: "row",
                     justifyContent: "space-between",
+                    alignItems: "center",
                     padding: 8,
                     borderRadius: 12,
                     marginBottom: 12,
@@ -496,7 +498,8 @@ export default function ListScreen() {
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
-                      width: "33.333%",
+                      flex: 1,
+                      marginRight: 4,
                     }}
                   >
                     <Text
@@ -514,20 +517,19 @@ export default function ListScreen() {
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
-                      marginTop: 8,
-                      width: "66.666%",
                       gap: 4,
-                      marginRight: 8,
                     }}
                   >
                     <TextInput
                       style={{
                         paddingVertical: 4,
+                        paddingHorizontal: 2,
                         textAlign: "center",
-                        width: 40,
+                        width: 36,
                         borderRadius: 6,
                         backgroundColor: isDark ? colors.cardAlt : "#e5e7eb",
                         color: colors.text,
+                        fontSize: 13,
                       }}
                       keyboardType="numeric"
                       value={stockInputs[p.id] || ""}
@@ -542,12 +544,14 @@ export default function ListScreen() {
                     />
                     <TextInput
                       style={{
-                        padding: 4,
+                        paddingVertical: 4,
+                        paddingHorizontal: 2,
                         textAlign: "center",
-                        width: 40,
+                        width: 36,
                         borderRadius: 6,
                         backgroundColor: isDark ? colors.cardAlt : "#e5e7eb",
                         color: colors.text,
+                        fontSize: 13,
                       }}
                       keyboardType="numeric"
                       value={qtyInputs[p.id]}
@@ -560,13 +564,14 @@ export default function ListScreen() {
                     />
                     <TextInput
                       style={{
-                        padding: 4,
+                        paddingVertical: 4,
+                        paddingHorizontal: 2,
                         textAlign: "center",
-                        width: 64,
-                        marginRight: 8,
+                        width: 56,
                         borderRadius: 6,
                         backgroundColor: isDark ? colors.cardAlt : "#e5e7eb",
                         color: colors.text,
+                        fontSize: 13,
                       }}
                       keyboardType={
                         Platform.OS === "ios" ? "decimal-pad" : "numeric"
@@ -580,13 +585,13 @@ export default function ListScreen() {
                       }
                     />
                     <TouchableOpacity
-                      style={{ paddingHorizontal: 12, paddingVertical: 4 }}
+                      style={{ paddingHorizontal: 4, paddingVertical: 4 }}
                       onPress={() => handleSaveProduct(p.id)}
                     >
-                      <Text style={{ fontSize: 18 }}>✅</Text>
+                      <Text style={{ fontSize: 16 }}>✅</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={{ paddingHorizontal: 12, paddingVertical: 4 }}
+                      style={{ paddingHorizontal: 4, paddingVertical: 4 }}
                       onPress={() => handleRemoveProduct(p.id)}
                     >
                       <Text style={{ fontSize: 14, fontWeight: "bold" }}>
